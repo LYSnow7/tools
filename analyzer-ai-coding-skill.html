@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI编程能力评估工具 - MVP Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px 30px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-label {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .input-description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .conversation-input {
+            width: 100%;
+            min-height: 200px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        .conversation-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .analyze-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 20px;
+        }
+
+        .analyze-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .analyze-button:active {
+            transform: translateY(0);
+        }
+
+        .analyze-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .report {
+            display: none;
+            margin-top: 40px;
+        }
+
+        .report-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .report-section h3 {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .report-content {
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .example-box {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #e0e0e0;
+        }
+
+        .example-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .key-insight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .sample-data {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .sample-button {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background-color 0.2s;
+        }
+
+        .sample-button:hover {
+            background: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI编程能力评估工具</h1>
+            <p>量化你与AI协作编程的效率与质量</p>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <label class="input-label">📝 粘贴你与AI的编程对话记录</label>
+                <div class="input-description">
+                    请将你与ChatGPT、Claude或其他AI助手的编程对话完整粘贴到下方文本框中。我们将分析你的提问质量、交互模式，并提供具体的改进建议。
+                </div>
+                <textarea 
+                    class="conversation-input" 
+                    id="conversationInput"
+                    placeholder="例如：
+
+用户：帮我写一个Python函数来计算斐波那契数列
+
+AI：好的，我来为你写一个计算斐波那契数列的Python函数...
+
+用户：这个函数效率不高，能优化一下吗？
+
+AI：确实，递归版本的效率不高。我来为你写一个动态规划版本..."
+                ></textarea>
+            </div>
+
+            <div class="sample-data">
+                <p style="color: #666; margin-bottom: 10px;">没有对话记录？试试这些示例：</p>
+                <button class="sample-button" onclick="loadSampleData('good')">高质量对话示例</button>
+                <button class="sample-button" onclick="loadSampleData('poor')">待改进对话示例</button>
+            </div>
+
+            <button class="analyze-button" onclick="analyzeConversation()">🔍 开始分析</button>
+
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>正在分析你的对话记录，请稍候...</p>
+            </div>
+
+            <div class="report" id="report">
+                <div class="report-section">
+                    <h3>💡 Prompt质量分析</h3>
+                    <div class="report-content" id="promptAnalysis">
+                        <!-- 动态生成内容 -->
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>📊 交互模式分析</h3>
+                    <div class="report-content" id="interactionAnalysis">
+                        <!-- 动态生成内容 -->
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>🚀 核心提升建议</h3>
+                    <div class="key-insight" id="keyInsight">
+                        <!-- 动态生成内容 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 示例数据
+        const sampleData = {
+            good: `用户：我需要实现一个用户登录功能的API接口。具体需求如下：
+1. 接受POST请求，路径为/api/login
+2. 请求体包含username和password字段
+3. 需要验证用户身份，如果成功返回JWT token
+4. 如果失败返回相应的错误信息
+5. 使用Node.js + Express框架
+6. 密码需要与数据库中的哈希值进行比较
+请帮我写出完整的代码实现。
+
+AI：我来为你实现这个登录API接口。这是一个很好的需求描述，你提供了清晰的技术要求。
+
+[代码实现...]
+
+用户：这个实现很好！不过我想加强安全性，请问如何添加请求频率限制防止暴力破解？最好能提供具体的中间件代码示例。
+
+AI：很好的安全考虑！我来为你添加速率限制功能...
+
+用户：完美！最后一个问题，如何为这个登录接口编写单元测试？我们使用Jest测试框架。
+
+AI：我来为你编写完整的单元测试...`,
+            
+            poor: `用户：帮我写代码
+
+AI：您好！我很乐意帮您写代码。不过为了给您提供最合适的帮助，能否请您提供更多详细信息呢？
+
+用户：就是个登录功能
+
+AI：好的，我理解您需要登录功能。请问您希望使用什么编程语言和框架呢？
+
+用户：随便
+
+AI：我建议使用Node.js + Express来实现。以下是一个基本的登录接口...
+
+用户：不对，我要的是前端的
+
+AI：抱歉误解了！那您是需要前端的登录页面吗？请问使用什么前端框架？
+
+用户：能用就行
+
+AI：我为您提供一个HTML+CSS+JavaScript的登录页面...`
+        };
+
+        function loadSampleData(type) {
+            document.getElementById('conversationInput').value = sampleData[type];
+        }
+
+        function analyzeConversation() {
+            const input = document.getElementById('conversationInput').value.trim();
+            
+            if (!input) {
+                alert('请先粘贴对话记录！');
+                return;
+            }
+
+            // 显示加载状态
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('report').style.display = 'none';
+            
+            // 模拟分析过程
+            setTimeout(() => {
+                const analysis = mockAnalysis(input);
+                displayReport(analysis);
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('report').style.display = 'block';
+                
+                // 滚动到报告位置
+                document.getElementById('report').scrollIntoView({ behavior: 'smooth' });
+            }, 2000);
+        }
+
+        function mockAnalysis(input) {
+            // 简单的分析逻辑（实际应该调用AI API）
+            const lines = input.split('\n').filter(line => line.trim());
+            const userMessages = lines.filter(line => 
+                line.startsWith('用户：') || line.startsWith('User:') || line.startsWith('我')
+            );
+            const totalRounds = Math.ceil(userMessages.length / 2);
+            const avgLength = userMessages.reduce((sum, msg) => sum + msg.length, 0) / userMessages.length || 0;
+            
+            // 判断对话质量
+            const hasDetailedRequirements = input.includes('需求') || input.includes('具体') || input.includes('要求');
+            const hasContext = input.includes('框架') || input.includes('语言') || input.includes('技术');
+            const hasFollowUp = input.includes('优化') || input.includes('改进') || input.includes('问题');
+            
+            const isHighQuality = hasDetailedRequirements && hasContext && hasFollowUp && avgLength > 50;
+            
+            if (isHighQuality) {
+                return {
+                    type: 'high',
+                    stats: { totalRounds, avgLength: Math.round(avgLength) },
+                    goodExample: userMessages.find(msg => msg.length > 100) || userMessages[0],
+                    improvement: "继续保持详细描述需求的习惯，考虑在初次提问时就包含更多上下文信息。",
+                    pattern: "您习惯提供详细的需求描述和上下文信息，这是很好的协作模式。",
+                    keyInsight: "您已经掌握了高效的AI协作方式，建议继续深化在复杂场景下的提问技巧。"
+                };
+            } else {
+                return {
+                    type: 'low',
+                    stats: { totalRounds, avgLength: Math.round(avgLength) },
+                    goodExample: "在对话中寻找相对较好的提问...",
+                    improvement: "建议在提问时包含更多具体信息，如技术栈、具体需求、预期输出格式等。",
+                    pattern: "您的提问相对简洁，这可能导致需要多轮交互才能获得满意的答案。",
+                    keyInsight: "建议提升提问的具体性和完整性，一次性提供充足的上下文信息，这样能显著提高协作效率。"
+                };
+            }
+        }
+
+        function displayReport(analysis) {
+            // Prompt质量分析
+            const promptHtml = `
+                <div class="example-box">
+                    <div class="example-title">🌟 高光时刻</div>
+                    <div style="font-family: monospace; background: #f0f8ff; padding: 10px; border-radius: 4px; margin: 8px 0;">
+                        ${analysis.goodExample.substring(0, 200)}${analysis.goodExample.length > 200 ? '...' : ''}
+                    </div>
+                    <div style="color: #28a745; margin-top: 8px;">
+                        ✅ 优点：${analysis.type === 'high' ? '提供了清晰的需求描述和技术背景' : '表达了基本需求'}
+                    </div>
+                </div>
+                <div class="example-box">
+                    <div class="example-title">📈 改进建议</div>
+                    <div style="color: #666;">
+                        ${analysis.improvement}
+                    </div>
+                    ${analysis.type === 'low' ? `
+                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                        <strong>优化示例：</strong>需要实现用户登录功能，使用Node.js+Express，包含用户名密码验证、JWT生成、错误处理，请提供完整代码示例。
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            // 交互模式分析
+            const interactionHtml = `
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">${analysis.stats.totalRounds}</div>
+                        <div class="stat-label">对话轮次</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">${analysis.stats.avgLength}</div>
+                        <div class="stat-label">平均提问长度</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">${analysis.type === 'high' ? '高效' : '待优化'}</div>
+                        <div class="stat-label">协作效率</div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>模式解读：</strong>${analysis.pattern}
+                </div>
+            `;
+            
+            document.getElementById('promptAnalysis').innerHTML = promptHtml;
+            document.getElementById('interactionAnalysis').innerHTML = interactionHtml;
+            document.getElementById('keyInsight').innerHTML = analysis.keyInsight;
+        }
+    </script>
+</body>
+</html>
