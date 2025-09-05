@@ -1,0 +1,283 @@
+import React, { useState } from 'react';
+import { Coffee, Sun, Mountain, TreePine, Award } from 'lucide-react';
+
+const CoffeeBeanGame = () => {
+  const [currentStage, setCurrentStage] = useState('planting'); // planting, growing, harvest
+  const [plantingConditions, setPlantingConditions] = useState({
+    altitude: '',
+    sunlight: '',
+    soil: ''
+  });
+  const [coffeeBeans, setCoffeeBeans] = useState([]);
+  const [knowledge, setKnowledge] = useState([]);
+  const [score, setScore] = useState(0);
+
+  const altitudeOptions = [
+    { value: 'low', label: '低海拔 (< 800m)', icon: '🏞️' },
+    { value: 'medium', label: '中海拔 (800-1200m)', icon: '⛰️' },
+    { value: 'high', label: '高海拔 (> 1200m)', icon: '🏔️' }
+  ];
+
+  const sunlightOptions = [
+    { value: 'shade', label: '遮阴种植', icon: '🌳' },
+    { value: 'partial', label: '半日照', icon: '⛅' },
+    { value: 'full', label: '全日照', icon: '☀️' }
+  ];
+
+  const soilOptions = [
+    { value: 'volcanic', label: '火山土', icon: '🌋' },
+    { value: 'clay', label: '粘土', icon: '🟤' },
+    { value: 'sandy', label: '沙土', icon: '🏖️' }
+  ];
+
+
+
+  const generateCoffeeBean = () => {
+    const key = `${plantingConditions.altitude}-${plantingConditions.sunlight}-${plantingConditions.soil}`;
+    const profile = flavorProfiles[key] || {
+      flavors: ['普通', '平淡'],
+      acidity: '中等',
+      body: '一般',
+      region: '实验品种',
+      knowledge: '这种组合比较少见，风味特征不明显。'
+    };
+
+    const newBean = {
+      id: Date.now(),
+      ...profile,
+      conditions: { ...plantingConditions }
+    };
+
+    setCoffeeBeans(prev => [...prev, newBean]);
+    setKnowledge(prev => [...prev, profile.knowledge]);
+    setScore(prev => prev + 10);
+    return newBean;
+  };
+
+  const handleHarvest = () => {
+    if (plantingConditions.altitude && plantingConditions.sunlight && plantingConditions.soil) {
+      const newBean = generateCoffeeBean();
+      setCurrentStage('harvest');
+    }
+  };
+
+  const resetGame = () => {
+    setCurrentStage('planting');
+    setPlantingConditions({ altitude: '', sunlight: '', soil: '' });
+  };
+
+  const renderPlantingStage = () => (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-green-800 mb-2">🌱 种植你的咖啡豆</h2>
+        <p className="text-gray-600">选择种植条件来培育独特风味的咖啡豆</p>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-6">
+        <div className="bg-white p-4 rounded-lg shadow-md">
+          <h3 className="font-semibold text-lg mb-3 flex items-center">
+            <Mountain className="mr-2 text-brown-600" /> 海拔选择
+          </h3>
+          <div className="space-y-2">
+            {altitudeOptions.map(option => (
+              <button
+                key={option.value}
+                onClick={() => setPlantingConditions(prev => ({ ...prev, altitude: option.value }))}
+                className={`w-full p-3 rounded-lg border-2 transition-all ${
+                  plantingConditions.altitude === option.value
+                    ? 'border-green-500 bg-green-50 text-green-700'
+                    : 'border-gray-200 hover:border-green-300'
+                }`}
+              >
+                <span className="text-xl mr-2">{option.icon}</span>
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg shadow-md">
+          <h3 className="font-semibold text-lg mb-3 flex items-center">
+            <Sun className="mr-2 text-yellow-600" /> 阳光条件
+          </h3>
+          <div className="space-y-2">
+            {sunlightOptions.map(option => (
+              <button
+                key={option.value}
+                onClick={() => setPlantingConditions(prev => ({ ...prev, sunlight: option.value }))}
+                className={`w-full p-3 rounded-lg border-2 transition-all ${
+                  plantingConditions.sunlight === option.value
+                    ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
+                    : 'border-gray-200 hover:border-yellow-300'
+                }`}
+              >
+                <span className="text-xl mr-2">{option.icon}</span>
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg shadow-md">
+          <h3 className="font-semibold text-lg mb-3 flex items-center">
+            <TreePine className="mr-2 text-amber-600" /> 土壤类型
+          </h3>
+          <div className="space-y-2">
+            {soilOptions.map(option => (
+              <button
+                key={option.value}
+                onClick={() => setPlantingConditions(prev => ({ ...prev, soil: option.value }))}
+                className={`w-full p-3 rounded-lg border-2 transition-all ${
+                  plantingConditions.soil === option.value
+                    ? 'border-amber-500 bg-amber-50 text-amber-700'
+                    : 'border-gray-200 hover:border-amber-300'
+                }`}
+              >
+                <span className="text-xl mr-2">{option.icon}</span>
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="text-center">
+        <button
+          onClick={handleHarvest}
+          disabled={!plantingConditions.altitude || !plantingConditions.sunlight || !plantingConditions.soil}
+          className="bg-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+        >
+          🌾 收获咖啡豆
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderHarvestStage = () => {
+    const latestBean = coffeeBeans[coffeeBeans.length - 1];
+    
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-amber-800 mb-2">☕ 收获成果</h2>
+          <p className="text-gray-600">恭喜！你培育出了独特的咖啡豆</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-xl shadow-lg">
+          <div className="text-center mb-4">
+            <div className="text-6xl mb-2">☕</div>
+            <h3 className="text-xl font-bold text-amber-800">{latestBean.region}</h3>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded-lg">
+              <h4 className="font-semibold text-gray-800 mb-2">风味特征</h4>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {latestBean.flavors.map((flavor, index) => (
+                  <span key={index} className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm">
+                    {flavor}
+                  </span>
+                ))}
+              </div>
+              <p className="text-sm text-gray-600">
+                <strong>酸度:</strong> {latestBean.acidity} | <strong>醇厚度:</strong> {latestBean.body}
+              </p>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg">
+              <h4 className="font-semibold text-gray-800 mb-2">☀️ 知识点</h4>
+              <p className="text-sm text-gray-700">{latestBean.knowledge}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center space-x-4">
+          <button
+            onClick={resetGame}
+            className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+          >
+            🌱 再次种植
+          </button>
+          <button
+            onClick={() => setCurrentStage('collection')}
+            className="bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700 transition-colors"
+          >
+            📚 查看收藏
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCollection = () => (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-purple-800 mb-2">📚 我的咖啡收藏</h2>
+        <p className="text-gray-600">你已收集了 {coffeeBeans.length} 种咖啡豆</p>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {coffeeBeans.map((bean, index) => (
+          <div key={bean.id} className="bg-white p-4 rounded-lg shadow-md">
+            <div className="text-center mb-3">
+              <div className="text-3xl mb-1">☕</div>
+              <h3 className="font-semibold text-sm">{bean.region}</h3>
+            </div>
+            <div className="space-y-2 text-xs">
+              <div className="flex flex-wrap gap-1">
+                {bean.flavors.map((flavor, i) => (
+                  <span key={i} className="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs">
+                    {flavor}
+                  </span>
+                ))}
+              </div>
+              <p className="text-gray-600">酸度: {bean.acidity} | 醇厚: {bean.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-blue-50 p-4 rounded-lg">
+        <h3 className="font-semibold text-blue-800 mb-2">🧠 学到的知识</h3>
+        <div className="space-y-2">
+          {knowledge.map((item, index) => (
+            <p key={index} className="text-sm text-blue-700 bg-white p-2 rounded">
+              {index + 1}. {item}
+            </p>
+          ))}
+        </div>
+      </div>
+
+      <div className="text-center">
+        <button
+          onClick={() => setCurrentStage('planting')}
+          className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+        >
+          🌱 继续种植
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-green-50 to-amber-50 min-h-screen">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-green-800 mb-2 flex items-center justify-center">
+          <Coffee className="mr-3" /> 咖啡豆种植大师
+        </h1>
+        <div className="flex items-center justify-center space-x-4 text-sm text-gray-600">
+          <span className="flex items-center">
+            <Award className="mr-1 w-4 h-4" /> 得分: {score}
+          </span>
+          <span>收集: {coffeeBeans.length} 种</span>
+        </div>
+      </div>
+
+      {currentStage === 'planting' && renderPlantingStage()}
+      {currentStage === 'harvest' && renderHarvestStage()}
+      {currentStage === 'collection' && renderCollection()}
+    </div>
+  );
+};
+
+export default CoffeeBeanGame;
