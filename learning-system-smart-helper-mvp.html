@@ -1,0 +1,713 @@
+import React, { useState, useRef } from 'react';
+import { Download, Plus, Trash2, Eye, FileText, BarChart3, Users, Lightbulb, User, BookOpen, Target, TrendingUp, Play, ChevronLeft, ChevronRight } from 'lucide-react';
+
+const EducationAIMVP = () => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [competitors, setCompetitors] = useState([
+    { name: '作业帮', features: ['拍照搜题', 'AI批改', '个性化练习'], userFeedback: '题库丰富，但个性化程度有限', rating: 4.2 },
+    { name: '猿辅导', features: ['直播课程', 'AI诊断', '学习报告'], userFeedback: '课程质量高，但价格偏贵', rating: 4.1 },
+    { name: '学而思', features: ['名师授课', '习题推荐', '进度跟踪'], userFeedback: '师资优秀，但课程密度大', rating: 4.3 },
+    { name: '有道智云', features: ['智能翻译', '语音识别', '作文批改'], userFeedback: '技术先进，但学科覆盖不全', rating: 4.0 },
+    { name: '小猿搜题', features: ['题目识别', '解题步骤', '知识点讲解'], userFeedback: '搜题准确，但缺乏系统性学习', rating: 4.2 }
+  ]);
+  
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+
+  const [report, setReport] = useState({
+    marketAnalysis: '',
+    painPoints: '',
+    opportunities: '',
+    solution: ''
+  });
+
+  const reportRef = useRef(null);
+
+  const addCompetitor = () => {
+    const newCompetitor = {
+      name: '新产品',
+      features: ['功能1', '功能2'],
+      userFeedback: '用户反馈',
+      rating: 4.0
+    };
+    setCompetitors([...competitors, newCompetitor]);
+  };
+
+  const removeCompetitor = (index) => {
+    setCompetitors(competitors.filter((_, i) => i !== index));
+  };
+
+  const updateCompetitor = (index, field, value) => {
+    const updated = [...competitors];
+    if (field === 'features') {
+      updated[index][field] = value.split(',').map(f => f.trim());
+    } else {
+      updated[index][field] = value;
+    }
+    setCompetitors(updated);
+  };
+
+  const generateReport = () => {
+    const avgRating = (competitors.reduce((sum, comp) => sum + comp.rating, 0) / competitors.length).toFixed(1);
+    const allFeatures = competitors.flatMap(comp => comp.features);
+    const commonFeatures = [...new Set(allFeatures)].slice(0, 5);
+
+    setReport({
+      marketAnalysis: `当前K12在线教育AI产品市场竞争激烈，主要玩家包括${competitors.map(c => c.name).join('、')}等。平均用户评分${avgRating}分，显示市场接受度较高。主流功能集中在${commonFeatures.slice(0, 3).join('、')}等方面。`,
+      
+      painPoints: `通过竞品分析发现三大核心痛点：1）个性化程度不足 - 现有产品多采用统一化内容推送，缺乏真正的因材施教；2）学习路径单一 - 缺乏基于学生能力和兴趣的自适应学习路径；3）反馈机制不完善 - 学习效果评估多为结果性评价，缺乏过程性指导。`,
+      
+      opportunities: `识别出三个核心创新机会：1）自适应学习路径 - 基于AI算法动态调整学习内容和难度；2）多模态交互学习 - 结合语音、图像、文本等多种交互方式；3）情感化学习伴侣 - 提供情感支持和学习动机激发。`,
+      
+      solution: `"智学助手"产品方案：构建基于大模型的个性化学习系统，核心功能包括智能学情诊断、自适应路径规划、多模态内容生成、实时学习反馈。通过AI技术实现真正的个性化教育，让每个学生都能找到适合自己的学习方式。`
+    });
+    setCurrentStep(3);
+  };
+
+  const downloadReport = () => {
+    const reportContent = `
+# 智学助手 - 教育AI产品市场分析报告
+
+## 1. 市场现状分析
+${report.marketAnalysis}
+
+### 竞品功能对比
+${competitors.map(comp => `
+**${comp.name}** (评分: ${comp.rating})
+- 核心功能: ${comp.features.join(', ')}
+- 用户反馈: ${comp.userFeedback}
+`).join('')}
+
+## 2. 用户痛点总结
+${report.painPoints}
+
+## 3. 产品机会点识别
+${report.opportunities}
+
+## 4. 解决方案概述
+${report.solution}
+
+---
+报告生成时间: ${new Date().toLocaleString('zh-CN')}
+`;
+
+    const blob = new Blob([reportContent], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '智学助手市场分析报告.md';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // 页面原型设计数据
+  const pageDesigns = [
+    // 登录页面
+    {
+      name: '登录页面',
+      component: (
+        <div className="bg-gradient-to-br from-blue-400 to-purple-600 text-white p-8 rounded-lg">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <BookOpen className="w-8 h-8" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2">智学助手</h1>
+            <p className="opacity-90">你的专属AI学习伙伴</p>
+          </div>
+          
+          <div className="bg-white bg-opacity-10 p-6 rounded-lg mb-6">
+            <div className="space-y-4">
+              <div>
+                <input 
+                  type="text" 
+                  placeholder="手机号/邮箱" 
+                  className="w-full p-3 rounded-lg bg-white bg-opacity-20 placeholder-white placeholder-opacity-70 border border-white border-opacity-30 text-white"
+                />
+              </div>
+              <div>
+                <input 
+                  type="password" 
+                  placeholder="密码" 
+                  className="w-full p-3 rounded-lg bg-white bg-opacity-20 placeholder-white placeholder-opacity-70 border border-white border-opacity-30 text-white"
+                />
+              </div>
+              <button className="w-full bg-white text-blue-600 p-3 rounded-lg font-semibold hover:bg-gray-100">
+                立即登录
+              </button>
+            </div>
+          </div>
+          
+          <div className="bg-white bg-opacity-10 p-4 rounded-lg">
+            <h3 className="font-semibold mb-3">首次使用？告诉我们关于你：</h3>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <button className="p-2 bg-white bg-opacity-20 rounded hover:bg-opacity-30">小学生</button>
+              <button className="p-2 bg-white bg-opacity-20 rounded hover:bg-opacity-30">初中生</button>
+              <button className="p-2 bg-white bg-opacity-20 rounded hover:bg-opacity-30">高中生</button>
+              <button className="p-2 bg-white bg-opacity-20 rounded hover:bg-opacity-30">家长</button>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    
+    // 学习诊断页面
+    {
+      name: '学习诊断',
+      component: (
+        <div className="bg-green-50 p-8 rounded-lg">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-green-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <Target className="w-8 h-8 text-green-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">智能学情诊断</h2>
+            <p className="text-gray-600">让AI了解你的学习状态，制定专属方案</p>
+          </div>
+          
+          <div className="space-y-6">
+            <div className="bg-white p-4 rounded-lg border-l-4 border-green-500">
+              <h3 className="font-semibold mb-3 flex items-center">
+                <span className="w-6 h-6 bg-green-500 text-white rounded-full text-sm flex items-center justify-center mr-2">1</span>
+                数学基础测试 (5分钟)
+              </h3>
+              <div className="bg-gray-50 p-4 rounded-lg mb-3">
+                <p className="font-medium mb-2">计算：3x + 5 = 14，求x的值？</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button className="p-2 bg-white border rounded hover:bg-blue-50 text-left">A. x = 3</button>
+                  <button className="p-2 bg-white border rounded hover:bg-blue-50 text-left">B. x = 4</button>
+                  <button className="p-2 bg-white border rounded hover:bg-blue-50 text-left">C. x = 5</button>
+                  <button className="p-2 bg-white border rounded hover:bg-blue-50 text-left">D. x = 6</button>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-green-500 h-2 rounded-full w-1/3"></div>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">进度: 2/6 题</p>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg border-l-4 border-gray-300">
+              <h3 className="font-semibold mb-3 flex items-center text-gray-500">
+                <span className="w-6 h-6 bg-gray-300 text-white rounded-full text-sm flex items-center justify-center mr-2">2</span>
+                学习习惯评估
+              </h3>
+              <p className="text-gray-400">完成基础测试后解锁</p>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg border-l-4 border-gray-300">
+              <h3 className="font-semibold mb-3 flex items-center text-gray-500">
+                <span className="w-6 h-6 bg-gray-300 text-white rounded-full text-sm flex items-center justify-center mr-2">3</span>
+                兴趣偏好分析
+              </h3>
+              <p className="text-gray-400">完成前序步骤后解锁</p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    
+    // 个性化推荐页面
+    {
+      name: '个性化推荐',
+      component: (
+        <div className="bg-purple-50 p-8 rounded-lg">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-purple-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <Lightbulb className="w-8 h-8 text-purple-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">专属学习方案</h2>
+            <p className="text-gray-600">基于你的诊断结果，AI为你量身定制</p>
+          </div>
+          
+          <div className="grid gap-4 mb-6">
+            <div className="bg-white p-4 rounded-lg border-l-4 border-purple-500">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="font-semibold text-gray-800">今日推荐：二次函数专项</h3>
+                  <p className="text-sm text-gray-600">匹配度 95% • 预计用时 25分钟</p>
+                </div>
+                <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">优先级高</span>
+              </div>
+              <div className="flex space-x-2 mb-3">
+                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">概念理解</span>
+                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">例题讲解</span>
+                <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">练习巩固</span>
+              </div>
+              <button className="bg-purple-500 text-white px-4 py-2 rounded-lg flex items-center hover:bg-purple-600">
+                <Play className="w-4 h-4 mr-2" />
+                开始学习
+              </button>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg border-l-4 border-blue-300">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="font-semibold text-gray-800">巩固练习：一次函数</h3>
+                  <p className="text-sm text-gray-600">匹配度 88% • 预计用时 15分钟</p>
+                </div>
+                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">巩固</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+                <div className="bg-blue-500 h-2 rounded-full w-3/4"></div>
+              </div>
+              <p className="text-sm text-gray-600 mb-3">已完成 12/16 题</p>
+              <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">继续练习</button>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-r from-purple-100 to-pink-100 p-4 rounded-lg">
+            <h3 className="font-semibold mb-2">🤖 AI小助手说：</h3>
+            <p className="text-sm text-gray-700">"你在函数概念理解上很棒！建议多做一些应用题来提高解题速度。加油！💪"</p>
+          </div>
+        </div>
+      )
+    },
+    
+    // 学习进度页面
+    {
+      name: '学习进度',
+      component: (
+        <div className="bg-blue-50 p-8 rounded-lg">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-blue-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <TrendingUp className="w-8 h-8 text-blue-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">学习成长轨迹</h2>
+            <p className="text-gray-600">记录每一步进步，见证成长奇迹</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white p-4 rounded-lg">
+              <h3 className="font-semibold mb-4 flex items-center">
+                <span className="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                本周学习统计
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">学习天数</span>
+                  <span className="font-semibold">5/7 天</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">累计时长</span>
+                  <span className="font-semibold">4小时23分</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">完成练习</span>
+                  <span className="font-semibold">156 题</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">正确率</span>
+                  <span className="font-semibold text-green-600">85.2%</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg">
+              <h3 className="font-semibold mb-4">知识点掌握情况</h3>
+              <div className="space-y-3">
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>二次函数</span>
+                    <span>92%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-green-500 h-2 rounded-full w-11/12"></div>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>一次函数</span>
+                    <span>76%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-yellow-500 h-2 rounded-full w-3/4"></div>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>几何证明</span>
+                    <span>45%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-red-500 h-2 rounded-full w-1/2"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-lg text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-lg">🏆 本周成就</h3>
+                <p className="text-sm opacity-90">连续学习5天，进步显著！</p>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold">+50</div>
+                <div className="text-xs">经验值</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    
+    // 互动练习页面
+    {
+      name: '互动练习',
+      component: (
+        <div className="bg-orange-50 p-8 rounded-lg">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-orange-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <BookOpen className="w-8 h-8 text-orange-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">智能互动练习</h2>
+            <p className="text-gray-600">AI实时生成题目，动态调整难度</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-semibold">二次函数综合练习</h3>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">题目 3/10</span>
+                <div className="w-20 bg-gray-200 rounded-full h-2">
+                  <div className="bg-orange-500 h-2 rounded-full w-1/3"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 p-4 rounded-lg mb-4">
+              <p className="font-medium mb-3">已知抛物线 y = ax² + bx + c 经过点(1,0)、(3,0)、(0,3)，求该抛物线的解析式。</p>
+              
+              <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400 mb-3">
+                <p className="text-sm text-blue-700">💡 <strong>AI提示：</strong> 可以利用点在抛物线上这一条件，建立方程组来求解参数a、b、c</p>
+              </div>
+              
+              <textarea 
+                placeholder="请写出你的解题过程..."
+                className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none"
+              ></textarea>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <button className="text-orange-600 hover:text-orange-800">需要更多提示？</button>
+              <div className="space-x-2">
+                <button className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">跳过此题</button>
+                <button className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600">提交答案</button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded-lg border border-green-200">
+              <h4 className="font-semibold text-green-600 mb-2">✅ 上一题反馈</h4>
+              <p className="text-sm text-gray-700 mb-2">解题思路正确！注意计算过程中的符号处理。</p>
+              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">+5 积分</span>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg">
+              <h4 className="font-semibold mb-2">📊 实时分析</h4>
+              <div className="text-sm space-y-1">
+                <p>• 当前正确率: <span className="font-semibold">67%</span></p>
+                <p>• 建议调整: <span className="text-orange-600">保持当前难度</span></p>
+                <p>• 薄弱环节: <span className="text-red-600">计算准确性</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+  ];
+
+  return (
+    <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+      <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">智学助手 MVP</h1>
+          <p className="text-gray-600">教育AI产品市场分析与原型设计工具</p>
+        </div>
+
+        {/* 步骤导航 */}
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center space-x-4">
+            {[1, 2, 3].map((step) => (
+              <div key={step} className="flex items-center">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+                  currentStep >= step ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
+                }`}>
+                  {step}
+                </div>
+                {step < 3 && <div className={`w-16 h-0.5 ${currentStep > step ? 'bg-blue-500' : 'bg-gray-200'}`} />}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex justify-center space-x-2 mb-6">
+          <button
+            onClick={() => setCurrentStep(1)}
+            className={`px-4 py-2 rounded-lg font-medium ${currentStep === 1 ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+          >
+            <BarChart3 className="w-4 h-4 inline mr-2" />
+            竞品调研
+          </button>
+          <button
+            onClick={() => setCurrentStep(2)}
+            className={`px-4 py-2 rounded-lg font-medium ${currentStep === 2 ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+          >
+            <Eye className="w-4 h-4 inline mr-2" />
+            概念原型
+          </button>
+          <button
+            onClick={() => setCurrentStep(3)}
+            className={`px-4 py-2 rounded-lg font-medium ${currentStep === 3 ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+          >
+            <FileText className="w-4 h-4 inline mr-2" />
+            分析报告
+          </button>
+        </div>
+
+        {/* 第一步：竞品调研 */}
+        {currentStep === 1 && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-800">竞品功能分析</h2>
+              <button
+                onClick={addCompetitor}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                添加产品
+              </button>
+            </div>
+
+            <div className="grid gap-4">
+              {competitors.map((comp, index) => (
+                <div key={index} className="bg-gray-50 p-6 rounded-lg">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">产品名称</label>
+                      <input
+                        type="text"
+                        value={comp.name}
+                        onChange={(e) => updateCompetitor(index, 'name', e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">核心功能</label>
+                      <input
+                        type="text"
+                        value={comp.features.join(', ')}
+                        onChange={(e) => updateCompetitor(index, 'features', e.target.value)}
+                        placeholder="用逗号分隔"
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">评分</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="5"
+                        step="0.1"
+                        value={comp.rating}
+                        onChange={(e) => updateCompetitor(index, 'rating', parseFloat(e.target.value))}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <button
+                        onClick={() => removeCompetitor(index)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-md flex items-center"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">用户反馈</label>
+                    <textarea
+                      value={comp.userFeedback}
+                      onChange={(e) => updateCompetitor(index, 'userFeedback', e.target.value)}
+                      rows="2"
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center">
+              <button
+                onClick={() => setCurrentStep(2)}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold"
+              >
+                进入原型设计 →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 第二步：概念原型 */}
+        {currentStep === 2 && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-800">产品原型设计</h2>
+            
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-800">页面原型展示</h3>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setCurrentPageIndex(Math.max(0, currentPageIndex - 1))}
+                    disabled={currentPageIndex === 0}
+                    className="p-2 bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="text-sm text-gray-600">
+                    {currentPageIndex + 1} / {pageDesigns.length}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPageIndex(Math.min(pageDesigns.length - 1, currentPageIndex + 1))}
+                    disabled={currentPageIndex === pageDesigns.length - 1}
+                    className="p-2 bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow-lg border">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-xl font-bold text-gray-800">{pageDesigns[currentPageIndex].name}</h4>
+                  <div className="flex space-x-1">
+                    {pageDesigns.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentPageIndex(index)}
+                        className={`w-3 h-3 rounded-full transition-colors ${
+                          index === currentPageIndex ? 'bg-blue-500' : 'bg-gray-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  {pageDesigns[currentPageIndex].component}
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <Lightbulb className="w-5 h-5 mr-2 text-yellow-500" />
+                  核心创新点
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white p-4 rounded-lg">
+                    <h4 className="font-semibold text-blue-600 mb-2">智能诊断</h4>
+                    <p className="text-sm text-gray-600">多维度评估学习状态，生成个性化学习画像</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg">
+                    <h4 className="font-semibold text-green-600 mb-2">自适应路径</h4>
+                    <p className="text-sm text-gray-600">动态调整学习内容和难度，实现真正个性化</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg">
+                    <h4 className="font-semibold text-purple-600 mb-2">情感陪伴</h4>
+                    <p className="text-sm text-gray-600">AI学习伙伴提供情感支持和学习激励</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <button
+                  onClick={generateReport}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold"
+                >
+                  生成分析报告 →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 第三步：分析报告 */}
+        {currentStep === 3 && (
+          <div className="space-y-6" ref={reportRef}>
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-800">市场分析报告</h2>
+              <button
+                onClick={downloadReport}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                下载报告
+              </button>
+            </div>
+
+            <div className="grid gap-6">
+              <div className="bg-blue-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center">
+                  <BarChart3 className="w-5 h-5 mr-2" />
+                  市场现状分析
+                </h3>
+                <p className="text-gray-700 leading-relaxed">{report.marketAnalysis}</p>
+              </div>
+
+              <div className="bg-red-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-red-800 mb-3 flex items-center">
+                  <Users className="w-5 h-5 mr-2" />
+                  用户痛点总结
+                </h3>
+                <p className="text-gray-700 leading-relaxed">{report.painPoints}</p>
+              </div>
+
+              <div className="bg-yellow-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-yellow-800 mb-3 flex items-center">
+                  <Lightbulb className="w-5 h-5 mr-2" />
+                  产品机会点识别
+                </h3>
+                <p className="text-gray-700 leading-relaxed">{report.opportunities}</p>
+              </div>
+
+              <div className="bg-green-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-green-800 mb-3">解决方案概述</h3>
+                <p className="text-gray-700 leading-relaxed">{report.solution}</p>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg">
+              <h3 className="text-xl font-bold mb-4">下一步行动计划</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <h4 className="font-semibold mb-2">短期目标 (1-3个月)</h4>
+                  <ul className="text-sm space-y-1 opacity-90">
+                    <li>• 完成用户调研验证</li>
+                    <li>• 制作高保真原型</li>
+                    <li>• 技术架构设计</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">中期目标 (3-6个月)</h4>
+                  <ul className="text-sm space-y-1 opacity-90">
+                    <li>• MVP产品开发</li>
+                    <li>• 小规模用户测试</li>
+                    <li>• 产品迭代优化</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">长期目标 (6-12个月)</h4>
+                  <ul className="text-sm space-y-1 opacity-90">
+                    <li>• 正式产品发布</li>
+                    <li>• 市场推广运营</li>
+                    <li>• 商业化探索</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default EducationAIMVP;
