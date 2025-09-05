@@ -1,0 +1,583 @@
+import React, { useState, useRef } from 'react';
+import { Upload, FileText, BarChart3, Download, X, ChevronDown, ChevronRight } from 'lucide-react';
+
+const IPStyleAnalyzer = () => {
+  const [activeTab, setActiveTab] = useState('upload');
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    language: true,
+    topics: true,
+    values: true,
+    structure: true
+  });
+  
+  const fileInputRef = useRef(null);
+
+  // 处理文件上传
+  const handleFileUpload = async (event) => {
+    const files = Array.from(event.target.files);
+    
+    for (const file of files) {
+      try {
+        let content = '';
+        
+        if (file.type === 'text/plain' || file.name.endsWith('.md') || file.name.endsWith('.txt')) {
+          content = await file.text();
+        } else {
+          content = `文件：${file.name}（暂不支持该格式的内容提取）`;
+        }
+        
+        const newFile = {
+          id: Date.now() + Math.random(),
+          name: file.name,
+          size: file.size,
+          type: file.type.includes('text') ? '文本' : '其他',
+          content: content,
+          uploadTime: new Date().toLocaleString()
+        };
+        
+        setUploadedFiles(prev => [...prev, newFile]);
+      } catch (error) {
+        console.error('Error reading file:', file.name, error);
+        alert(`读取文件 ${file.name} 时出错`);
+      }
+    }
+  };
+
+  // 移除文件
+  const removeFile = (fileId) => {
+    setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
+  };
+
+  // AI风格分析
+  const analyzeStyle = async () => {
+    if (uploadedFiles.length === 0) {
+      alert('请先上传一些历史内容');
+      return;
+    }
+    
+    setIsAnalyzing(true);
+    setActiveTab('analysis');
+    
+    try {
+      // 提取真实文本内容
+      const allContent = uploadedFiles
+        .filter(file => file.content && !file.content.includes('暂不支持该格式'))
+        .map(file => file.content)
+        .join('\n\n');
+      
+      if (!allContent.trim()) {
+        alert('未找到可分析的文本内容，请上传.txt、.md等文本文件');
+        setIsAnalyzing(false);
+        return;
+      }
+      
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 2000,
+          messages: [
+            {
+              role: "user",
+              content: `请分析以下文本内容的写作风格，并返回JSON格式的分析结果：
+
+文本内容：
+${allContent}
+
+请按以下JSON格式返回分析结果，不要包含任何其他文字：
+
+{
+  "languageHabits": {
+    "writingStyle": "写作风格描述",
+    "sentenceLength": "句子长度特点",
+    "vocabulary": "词汇使用特点",
+    "tone": "语调特色",
+    "punctuation": "标点使用习惯"
+  },
+  "topicPreferences": [
+    {
+      "topic": "话题名称",
+      "percentage": 数字,
+      "keywords": ["关键词1", "关键词2", "关键词3", "关键词4"]
+    }
+  ],
+  "valuesTendency": {
+    "coreValues": ["价值观1", "价值观2", "价值观3", "价值观4"],
+    "communicationStyle": "沟通方式描述",
+    "attitude": "态度特点",
+    "perspective": "视角观点"
+  },
+  "contentStructure": {
+    "openingStyle": "开头方式",
+    "bodyStructure": "主体结构",
+    "closingStyle": "结尾风格",
+    "interactivity": "互动性特点"
+  },
+  "styleVector": [8个0-1之间的数值表示风格向量]
+}`
+            }
+          ]
+        })
+      });
+
+      const data = await response.json();
+      let responseText = data.content[0].text;
+      
+      // 清理可能的markdown格式
+      responseText = responseText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      
+      const analysisResult = JSON.parse(responseText);
+      setAnalysisResult(analysisResult);
+      
+    } catch (error) {
+      console.error('Analysis error:', error);
+      alert('分析过程中出现错误，请重试');
+      setIsAnalyzing(false);
+    }
+    
+    setIsAnalyzing(false);
+  };
+
+  // 切换展开状态
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // 生成报告
+  const generateReport = () => {
+    if (!analysisResult) {
+      alert('请先完成风格分析');
+      return;
+    }
+    
+    const reportContent = `
+个人IP风格分析报告 v3.0
+
+== 语言习惯特征 ==
+- 写作风格：${analysisResult.languageHabits.writingStyle}
+- 句子长度：${analysisResult.languageHabits.sentenceLength}
+- 词汇特点：${analysisResult.languageHabits.vocabulary}
+- 语调特色：${analysisResult.languageHabits.tone}
+- 标点使用：${analysisResult.languageHabits.punctuation}
+
+== 话题偏好分布 ==
+${analysisResult.topicPreferences.map(topic => 
+  `- ${topic.topic}：${topic.percentage}%
+  关键词：${topic.keywords.join('、')}`
+).join('\n')}
+
+== 价值观倾向 ==
+- 核心价值：${analysisResult.valuesTendency.coreValues.join('、')}
+- 沟通方式：${analysisResult.valuesTendency.communicationStyle}
+- 态度特点：${analysisResult.valuesTendency.attitude}
+- 视角观点：${analysisResult.valuesTendency.perspective}
+
+== 内容结构偏好 ==
+- 开头方式：${analysisResult.contentStructure.openingStyle}
+- 主体结构：${analysisResult.contentStructure.bodyStructure}
+- 结尾风格：${analysisResult.contentStructure.closingStyle}
+- 互动性特点：${analysisResult.contentStructure.interactivity}
+
+== 风格向量 ==
+${analysisResult.styleVector.map((val, i) => `维度${i+1}: ${val.toFixed(2)}`).join(' | ')}
+
+== 报告信息 ==
+生成时间：${new Date().toLocaleString()}
+分析文件数：${uploadedFiles.length}
+版本：个人IP风格分析器 v3.0
+    `.trim();
+    
+    const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `IP风格分析报告_v3_${new Date().toISOString().slice(0,10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+            个人IP风格分析器
+          </h1>
+          <p className="text-gray-600 text-xl max-w-2xl mx-auto">
+            AI驱动的创作风格深度分析工具，帮你建立独特的个人IP画像
+          </p>
+        </div>
+
+        {/* Navigation */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl mb-8 border border-white/20">
+          <div className="flex">
+            {[
+              { id: 'upload', label: '内容上传', icon: Upload, desc: '上传历史文章' },
+              { id: 'analysis', label: '风格分析', icon: BarChart3, desc: 'AI深度分析' },
+            ].map(tab => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 flex flex-col items-center justify-center gap-2 py-6 px-8 font-medium transition-all duration-300 ${
+                    activeTab === tab.id 
+                      ? 'text-purple-600 bg-gradient-to-r from-purple-50 to-indigo-50 shadow-inner' 
+                      : 'text-gray-600 hover:text-purple-600 hover:bg-gray-50/50'
+                  }`}
+                >
+                  <Icon size={24} />
+                  <span className="text-lg">{tab.label}</span>
+                  <span className="text-xs text-gray-500">{tab.desc}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/20">
+          
+          {/* Upload Tab */}
+          {activeTab === 'upload' && (
+            <div className="space-y-8">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-gray-800 mb-3">上传历史内容</h2>
+                <p className="text-gray-600 text-lg">支持 .txt、.md 等文本格式，用于构建你的个人风格基线</p>
+              </div>
+
+              {/* Upload Area */}
+              <div 
+                className="border-3 border-dashed border-purple-200 rounded-2xl p-12 text-center hover:border-purple-400 hover:bg-purple-50/30 transition-all duration-300 cursor-pointer group"
+                onClick={() => fileInputRef.current?.click()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const files = Array.from(e.dataTransfer.files);
+                  const event = { target: { files } };
+                  handleFileUpload(event);
+                }}
+                onDragOver={(e) => e.preventDefault()}
+                onDragEnter={(e) => e.preventDefault()}
+              >
+                <div className="mb-6">
+                  <Upload className="mx-auto text-purple-300 group-hover:text-purple-500 transition-colors" size={64} />
+                </div>
+                <p className="text-xl text-gray-700 mb-3 font-medium">点击上传或拖拽文件到此处</p>
+                <p className="text-gray-500">支持 .txt、.md 格式，建议上传 3-10 篇代表性文章</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".txt,.md"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </div>
+
+              {/* Uploaded Files */}
+              {uploadedFiles.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-semibold text-gray-800">已上传文件</h3>
+                    <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
+                      {uploadedFiles.length} 个文件
+                    </span>
+                  </div>
+                  <div className="grid gap-4 max-h-64 overflow-y-auto">
+                    {uploadedFiles.map(file => (
+                      <div key={file.id} className="flex items-center justify-between bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                        <div className="flex items-center gap-4">
+                          <div className="p-2 bg-purple-100 rounded-lg">
+                            {file.type === 'PDF' ? (
+                              <div className="w-6 h-6 bg-red-500 rounded flex items-center justify-center text-white text-xs font-bold">PDF</div>
+                            ) : (
+                              <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center text-white text-xs font-bold">DOC</div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-800">{file.name}</p>
+                            <p className="text-sm text-gray-500">
+                              {file.type} • {(file.size / 1024).toFixed(1)}KB • {file.uploadTime}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => removeFile(file.id)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Analyze Button */}
+              <div className="text-center">
+                <button
+                  onClick={analyzeStyle}
+                  disabled={uploadedFiles.length === 0 || isAnalyzing}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-12 py-4 rounded-2xl font-semibold text-lg hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  {isAnalyzing ? (
+                    <div className="flex items-center gap-3">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      AI 深度分析中...
+                    </div>
+                  ) : (
+                    '🚀 开始AI风格分析'
+                  )}
+                </button>
+                {uploadedFiles.length > 0 && !analysisResult && !isAnalyzing && (
+                  <p className="text-sm text-gray-500 mt-3">已准备 {uploadedFiles.length} 个文件，点击开始分析</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Analysis Tab */}
+          {activeTab === 'analysis' && (
+            <div className="space-y-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-800 mb-2">AI风格分析结果</h2>
+                  <p className="text-gray-600">基于Claude AI的深度分析，为你生成专业的风格画像</p>
+                </div>
+                {analysisResult && (
+                  <button
+                    onClick={generateReport}
+                    className="flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  >
+                    <Download size={20} />
+                    导出完整报告
+                  </button>
+                )}
+              </div>
+
+              {isAnalyzing ? (
+                <div className="text-center py-16">
+                  <div className="relative mb-8">
+                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-200 border-t-purple-600 mx-auto"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-8 h-8 bg-purple-600 rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Claude AI 正在深度分析...</h3>
+                  <p className="text-gray-600 mb-6">正在分析你的语言习惯、话题偏好、价值观倾向等</p>
+                  <div className="flex justify-center gap-2">
+                    <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce"></div>
+                    <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-3 h-3 bg-purple-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                </div>
+              ) : analysisResult ? (
+                <div className="grid gap-6">
+                  
+                  {/* Language Habits */}
+                  <div className="border border-gray-200 rounded-xl overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-50">
+                    <button
+                      onClick={() => toggleSection('language')}
+                      className="w-full flex items-center justify-between p-6 hover:bg-white/50 transition-colors"
+                    >
+                      <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">语</div>
+                        语言习惯特征
+                      </h3>
+                      {expandedSections.language ? <ChevronDown size={24} className="text-gray-600" /> : <ChevronRight size={24} className="text-gray-600" />}
+                    </button>
+                    {expandedSections.language && (
+                      <div className="px-6 pb-6 border-t bg-white/30">
+                        <div className="grid md:grid-cols-2 gap-4 mt-4">
+                          {Object.entries(analysisResult.languageHabits).map(([key, value]) => (
+                            <div key={key} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                              <p className="text-sm font-semibold text-blue-600 mb-2">
+                                {key === 'writingStyle' ? '📝 写作风格' :
+                                 key === 'sentenceLength' ? '📏 句子长度' :
+                                 key === 'vocabulary' ? '📚 词汇特点' :
+                                 key === 'tone' ? '🎵 语调特色' : '✨ 标点使用'}
+                              </p>
+                              <p className="text-gray-800">{value}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Topic Preferences */}
+                  <div className="border border-gray-200 rounded-xl overflow-hidden bg-gradient-to-r from-green-50 to-emerald-50">
+                    <button
+                      onClick={() => toggleSection('topics')}
+                      className="w-full flex items-center justify-between p-6 hover:bg-white/50 transition-colors"
+                    >
+                      <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">话</div>
+                        话题偏好分布
+                      </h3>
+                      {expandedSections.topics ? <ChevronDown size={24} className="text-gray-600" /> : <ChevronRight size={24} className="text-gray-600" />}
+                    </button>
+                    {expandedSections.topics && (
+                      <div className="px-6 pb-6 border-t bg-white/30">
+                        <div className="space-y-4 mt-4">
+                          {analysisResult.topicPreferences.map((topic, index) => (
+                            <div key={index} className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-semibold text-gray-800 text-lg">{topic.topic}</span>
+                                <span className="text-green-600 font-bold text-xl">{topic.percentage}%</span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+                                <div 
+                                  className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-1000"
+                                  style={{width: `${topic.percentage}%`}}
+                                ></div>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {topic.keywords.map((keyword, i) => (
+                                  <span key={i} className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                                    {keyword}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Values Tendency */}
+                  <div className="border border-gray-200 rounded-xl overflow-hidden bg-gradient-to-r from-purple-50 to-pink-50">
+                    <button
+                      onClick={() => toggleSection('values')}
+                      className="w-full flex items-center justify-between p-6 hover:bg-white/50 transition-colors"
+                    >
+                      <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">值</div>
+                        价值观倾向
+                      </h3>
+                      {expandedSections.values ? <ChevronDown size={24} className="text-gray-600" /> : <ChevronRight size={24} className="text-gray-600" />}
+                    </button>
+                    {expandedSections.values && (
+                      <div className="px-6 pb-6 border-t bg-white/30">
+                        <div className="grid md:grid-cols-2 gap-4 mt-4">
+                          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                            <h4 className="font-semibold text-purple-600 mb-3 flex items-center gap-2">
+                              <span>💎</span> 核心价值
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                              {analysisResult.valuesTendency.coreValues.map((value, i) => (
+                                <span key={i} className="bg-purple-100 text-purple-700 px-3 py-2 rounded-full text-sm font-semibold">
+                                  {value}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                            <h4 className="font-semibold text-purple-600 mb-3 flex items-center gap-2">
+                              <span>💬</span> 沟通方式
+                            </h4>
+                            <p className="text-gray-700">{analysisResult.valuesTendency.communicationStyle}</p>
+                          </div>
+                          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                            <h4 className="font-semibold text-purple-600 mb-3 flex items-center gap-2">
+                              <span>🌟</span> 态度特点
+                            </h4>
+                            <p className="text-gray-700">{analysisResult.valuesTendency.attitude}</p>
+                          </div>
+                          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                            <h4 className="font-semibold text-purple-600 mb-3 flex items-center gap-2">
+                              <span>👁️</span> 视角观点
+                            </h4>
+                            <p className="text-gray-700">{analysisResult.valuesTendency.perspective}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content Structure */}
+                  <div className="border border-gray-200 rounded-xl overflow-hidden bg-gradient-to-r from-orange-50 to-red-50">
+                    <button
+                      onClick={() => toggleSection('structure')}
+                      className="w-full flex items-center justify-between p-6 hover:bg-white/50 transition-colors"
+                    >
+                      <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">构</div>
+                        内容结构偏好
+                      </h3>
+                      {expandedSections.structure ? <ChevronDown size={24} className="text-gray-600" /> : <ChevronRight size={24} className="text-gray-600" />}
+                    </button>
+                    {expandedSections.structure && (
+                      <div className="px-6 pb-6 border-t bg-white/30">
+                        <div className="grid md:grid-cols-2 gap-4 mt-4">
+                          {Object.entries(analysisResult.contentStructure).map(([key, value]) => (
+                            <div key={key} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                              <p className="text-sm font-semibold text-orange-600 mb-2">
+                                {key === 'openingStyle' ? '🎬 开头风格' :
+                                 key === 'bodyStructure' ? '🏗️ 主体结构' :
+                                 key === 'closingStyle' ? '🎯 结尾风格' : '🤝 互动性'}
+                              </p>
+                              <p className="text-gray-800">{value}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-16">
+                  <div className="mb-6">
+                    <BarChart3 className="mx-auto text-gray-300" size={80} />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">等待分析</h3>
+                  {uploadedFiles.length > 0 ? (
+                    <div>
+                      <p className="text-gray-600 mb-4">已上传 {uploadedFiles.length} 个文件，请返回"内容上传"页面开始分析</p>
+                      <button
+                        onClick={() => setActiveTab('upload')}
+                        className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        返回上传页面
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-gray-600 mb-4">请先上传一些历史文章用于分析</p>
+                      <button
+                        onClick={() => setActiveTab('upload')}
+                        className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        开始上传文件
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-8 text-gray-500 text-sm">
+          <p>个人IP风格分析器 v3.0 • 基于Claude AI驱动 • 专注于深度风格分析</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default IPStyleAnalyzer;
