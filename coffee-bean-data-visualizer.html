@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咖啡风味探索 - Coffee Flavor Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #8B4513 0%, #D2691E 50%, #CD853F 100%);
+            color: #F5E6D3;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* 咖啡豆飘落动画 */
+        .coffee-beans {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .bean {
+            position: absolute;
+            width: 8px;
+            height: 12px;
+            background: #3E2723;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            opacity: 0.6;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* 导航栏 */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(62, 39, 35, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        nav li {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        nav li:hover {
+            background: rgba(245, 230, 211, 0.2);
+            transform: translateY(-2px);
+        }
+
+        nav li.active {
+            background: linear-gradient(45deg, #D2691E, #CD853F);
+            box-shadow: 0 4px 15px rgba(210, 105, 30, 0.4);
+        }
+
+        /* 主容器 */
+        .container {
+            position: relative;
+            z-index: 10;
+            padding: 100px 2rem 2rem;
+            min-height: 100vh;
+        }
+
+        /* 页面样式 */
+        .page {
+            display: none;
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 风味轮页面 */
+        .flavor-wheel-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            position: relative;
+        }
+
+        .flavor-wheel {
+            width: 500px;
+            height: 500px;
+            position: relative;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                #FF6B6B 0deg 45deg,
+                #4ECDC4 45deg 90deg,
+                #45B7D1 90deg 135deg,
+                #96CEB4 135deg 180deg,
+                #FFEAA7 180deg 225deg,
+                #DDA0DD 225deg 270deg,
+                #F4A261 270deg 315deg,
+                #E76F51 315deg 360deg
+            );
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            animation: rotate 20s linear infinite;
+            cursor: pointer;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .flavor-segment {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: right bottom;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .flavor-segment:hover {
+            transform: scale(1.1);
+            z-index: 20;
+        }
+
+        .flavor-segment:nth-child(1) { transform: rotate(0deg); }
+        .flavor-segment:nth-child(2) { transform: rotate(45deg); }
+        .flavor-segment:nth-child(3) { transform: rotate(90deg); }
+        .flavor-segment:nth-child(4) { transform: rotate(135deg); }
+        .flavor-segment:nth-child(5) { transform: rotate(180deg); }
+        .flavor-segment:nth-child(6) { transform: rotate(225deg); }
+        .flavor-segment:nth-child(7) { transform: rotate(270deg); }
+        .flavor-segment:nth-child(8) { transform: rotate(315deg); }
+
+        .flavor-info {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(62, 39, 35, 0.9);
+            padding: 2rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            max-width: 300px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .flavor-info.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+
+        /* 产区地图页面 */
+        .origin-map {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem 0;
+        }
+
+        .origin-card {
+            background: rgba(62, 39, 35, 0.8);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .origin-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .origin-card:hover::before {
+            left: 100%;
+        }
+
+        .origin-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .origin-flag {
+            width: 60px;
+            height: 40px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #D2691E, #CD853F);
+        }
+
+        /* 豆子品类页面 */
+        .bean-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            padding: 2rem 0;
+        }
+
+        .bean-card {
+            background: rgba(62, 39, 35, 0.8);
+            border-radius: 20px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .bean-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .bean-visual {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #8B4513, #3E2723);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            margin: 0 auto 1rem;
+            position: relative;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .bean-visual::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 2px;
+            background: #2C1810;
+            border-radius: 2px;
+        }
+
+        /* 对比页面 */
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            padding: 2rem 0;
+        }
+
+        .comparison-card {
+            background: rgba(62, 39, 35, 0.8);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .flavor-chart {
+            margin-top: 1rem;
+        }
+
+        .flavor-bar {
+            display: flex;
+            align-items: center;
+            margin: 0.5rem 0;
+        }
+
+        .flavor-name {
+            width: 80px;
+            font-size: 0.9rem;
+        }
+
+        .bar-container {
+            flex: 1;
+            height: 20px;
+            background: rgba(245, 230, 211, 0.2);
+            border-radius: 10px;
+            margin: 0 1rem;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #D2691E, #CD853F);
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .flavor-wheel {
+                width: 350px;
+                height: 350px;
+            }
+            
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+            
+            nav ul {
+                gap: 1rem;
+            }
+            
+            nav li {
+                padding: 0.3rem 0.8rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* 标题样式 */
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            background: linear-gradient(45deg, #F5E6D3, #D2691E);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: bold;
+        }
+
+        h2 {
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 咖啡豆飘落背景 -->
+    <div class="coffee-beans" id="coffeeBeans"></div>
+
+    <!-- 导航栏 -->
+    <nav>
+        <ul>
+            <li class="nav-item active" data-page="flavor-wheel">风味轮</li>
+            <li class="nav-item" data-page="origins">产区</li>
+            <li class="nav-item" data-page="beans">豆子品类</li>
+            <li class="nav-item" data-page="comparison">风味对比</li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <!-- 风味轮页面 -->
+        <div class="page active" id="flavor-wheel">
+            <h1>咖啡风味轮</h1>
+            <div class="flavor-wheel-container">
+                <div class="flavor-wheel" id="flavorWheel">
+                    <div class="flavor-segment" data-flavor="fruity"></div>
+                    <div class="flavor-segment" data-flavor="floral"></div>
+                    <div class="flavor-segment" data-flavor="sweet"></div>
+                    <div class="flavor-segment" data-flavor="nutty"></div>
+                    <div class="flavor-segment" data-flavor="chocolate"></div>
+                    <div class="flavor-segment" data-flavor="spicy"></div>
+                    <div class="flavor-segment" data-flavor="roasted"></div>
+                    <div class="flavor-segment" data-flavor="green"></div>
+                </div>
+                <div class="flavor-info" id="flavorInfo">
+                    <h3 id="flavorTitle">点击风味轮探索</h3>
+                    <p id="flavorDescription">选择不同的风味区域了解咖啡的复杂味觉层次</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 产区页面 -->
+        <div class="page" id="origins">
+            <h2>世界咖啡产区</h2>
+            <div class="origin-map">
+                <div class="origin-card" data-origin="ethiopia">
+                    <div class="origin-flag"></div>
+                    <h3>埃塞俄比亚</h3>
+                    <p>咖啡的发源地，以其复杂的花香和果香而闻名。典型风味包括蓝莓、柠檬和茉莉花香。</p>
+                    <div class="flavor-tags">
+                        <span>花香</span> <span>果香</span> <span>明亮酸度</span>
+                    </div>
+                </div>
+                <div class="origin-card" data-origin="colombia">
+                    <div class="origin-flag"></div>
+                    <h3>哥伦比亚</h3>
+                    <p>均衡的风味profile，中等醇厚度。典型风味包括焦糖、坚果和柑橘的平衡组合。</p>
+                    <div class="flavor-tags">
+                        <span>焦糖</span> <span>坚果</span> <span>柑橘</span>
+                    </div>
+                </div>
+                <div class="origin-card" data-origin="brazil">
+                    <div class="origin-flag"></div>
+                    <h3>巴西</h3>
+                    <p>世界最大的咖啡生产国，以其醇厚的口感和巧克力风味著称。</p>
+                    <div class="flavor-tags">
+                        <span>巧克力</span> <span>坚果</span> <span>低酸度</span>
+                    </div>
+                </div>
+                <div class="origin-card" data-origin="jamaica">
+                    <div class="origin-flag"></div>
+                    <h3>牙买加蓝山</h3>
+                    <p>世界上最昂贵的咖啡之一，口感温和平衡，几乎没有苦味。</p>
+                    <div class="flavor-tags">
+                        <span>温和</span> <span>平衡</span> <span>醇厚</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 豆子品类页面 -->
+        <div class="page" id="beans">
+            <h2>咖啡豆品类</h2>
+            <div class="bean-grid">
+                <div class="bean-card" data-bean="arabica">
+                    <div class="bean-visual"></div>
+                    <h3>阿拉比卡</h3>
+                    <p>占全球咖啡产量的60-70%，味道更加精致复杂，酸度较高。</p>
+                    <div class="characteristics">
+                        <small>特点：复杂、酸度高、香气丰富</small>
+                    </div>
+                </div>
+                <div class="bean-card" data-bean="robusta">
+                    <div class="bean-visual"></div>
+                    <h3>罗布斯塔</h3>
+                    <p>咖啡因含量更高，口感更苦，常用于意式浓缩咖啡的拼配。</p>
+                    <div class="characteristics">
+                        <small>特点：苦味重、咖啡因高、醇厚</small>
+                    </div>
+                </div>
+                <div class="bean-card" data-bean="liberica">
+                    <div class="bean-visual"></div>
+                    <h3>利比里亚</h3>
+                    <p>较为罕见的品种，具有独特的烟熏和木质香气。</p>
+                    <div class="characteristics">
+                        <small>特点：烟熏味、木质香、独特</small>
+                    </div>
+                </div>
+                <div class="bean-card" data-bean="excelsa">
+                    <div class="bean-visual"></div>
+                    <h3>埃克塞尔萨</h3>
+                    <p>拥有果香和酸味的复杂组合，常用于拼配增加层次。</p>
+                    <div class="characteristics">
+                        <small>特点：果香、酸味、层次丰富</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 风味对比页面 -->
+        <div class="page" id="comparison">
+            <h2>风味对比分析</h2>
+            <div class="comparison-container">
+                <div class="comparison-card">
+                    <h3>埃塞俄比亚 耶加雪菲</h3>
+                    <div class="flavor-chart">
+                        <div class="flavor-bar">
+                            <span class="flavor-name">花香</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 90%;"></div>
+                            </div>
+                            <span>9/10</span>
+                        </div>
+                        <div class="flavor-bar">
+                            <span class="flavor-name">果香</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 85%;"></div>
+                            </div>
+                            <span>8.5/10</span>
+                        </div>
+                        <div class="flavor-bar">
+                            <span class="flavor-name">酸度</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 80%;"></div>
+                            </div>
+                            <span>8/10</span>
+                        </div>
+                        <div class="flavor-bar">
+                            <span class="flavor-name">醇厚度</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 60%;"></div>
+                            </div>
+                            <span>6/10</span>
+                        </div>
+                        <div class="flavor-bar">
+                            <span class="flavor-name">苦味</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 30%;"></div>
+                            </div>
+                            <span>3/10</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card">
+                    <h3>巴西 桑托斯</h3>
+                    <div class="flavor-chart">
+                        <div class="flavor-bar">
+                            <span class="flavor-name">花香</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 40%;"></div>
+                            </div>
+                            <span>4/10</span>
+                        </div>
+                        <div class="flavor-bar">
+                            <span class="flavor-name">果香</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 50%;"></div>
+                            </div>
+                            <span>5/10</span>
+                        </div>
+                        <div class="flavor-bar">
+                            <span class="flavor-name">酸度</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 45%;"></div>
+                            </div>
+                            <span>4.5/10</span>
+                        </div>
+                        <div class="flavor-bar">
+                            <span class="flavor-name">醇厚度</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 85%;"></div>
+                            </div>
+                            <span>8.5/10</span>
+                        </div>
+                        <div class="flavor-bar">
+                            <span class="flavor-name">苦味</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 70%;"></div>
+                            </div>
+                            <span>7/10</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 咖啡豆飘落动画
+        function createCoffeeBeans() {
+            const container = document.getElementById('coffeeBeans');
+            const beanCount = 20;
+            
+            for (let i = 0; i < beanCount; i++) {
+                const bean = document.createElement('div');
+                bean.className = 'bean';
+                bean.style.left = Math.random() * 100 + '%';
+                bean.style.animationDuration = (Math.random() * 10 + 5) + 's';
+                bean.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(bean);
+            }
+        }
+
+        // 页面切换功能
+        function setupNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+            const pages = document.querySelectorAll('.page');
+
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const targetPage = item.getAttribute('data-page');
+                    
+                    // 更新导航状态
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    // 切换页面
+                    pages.forEach(page => page.classList.remove('active'));
+                    document.getElementById(targetPage).classList.add('active');
+                });
+            });
+        }
+
+        // 风味轮交互
+        function setupFlavorWheel() {
+            const flavorData = {
+                fruity: {
+                    title: '果香类',
+                    description: '包括浆果、柑橘、热带水果等风味。这些风味通常来自咖啡豆本身的天然特性和发酵过程。'
+                },
+                floral: {
+                    title: '花香类',
+                    description: '茉莉花、玫瑰、薰衣草等花香。这类风味常见于高海拔地区生长的阿拉比卡咖啡豆。'
+                },
+                sweet: {
+                    title: '甜味类',
+                    description: '蜂蜜、焦糖、红糖等甜味。通常通过适当的烘焙程度和冲泡方式来突出这些风味。'
+                },
+                nutty: {
+                    title: '坚果类',
+                    description: '杏仁、榛子、核桃等坚果风味。这类风味在中度烘焙的咖啡中最为明显。'
+                },
+                chocolate: {
+                    title: '巧克力类',
+                    description: '可可、黑巧克力、牛奶巧克力等风味。深度烘焙的咖啡豆通常会呈现这类风味。'
+                },
+                spicy: {
+                    title: '辛香类',
+                    description: '肉桂、丁香、胡椒等香料风味。这些风味为咖啡增添了复杂性和深度。'
+                },
+                roasted: {
+                    title: '烘焙类',
+                    description: '烟熏、烤面包、焦糖化等风味。这些是烘焙过程中产生的梅拉德反应的产物。'
+                },
+                green: {
+                    title: '生青类',
+                    description: '草本、蔬菜等风味。通常出现在烘焙不足或新鲜度不够的咖啡中。'
+                }
+            };
+
+            const segments = document.querySelectorAll('.flavor-segment');
+            const flavorInfo = document.getElementById('flavorInfo');
+            const flavorTitle = document.getElementById('flavorTitle');
+            const flavorDescription = document.getElementById('flavorDescription');
+
+            segments.forEach(segment => {
+                segment.addEventListener('click', () => {
+                    const flavor = segment.getAttribute('data-flavor');
+                    const data = flavorData[flavor];
+                    
+                    flavorTitle.textContent = data.title;
+                    flavorDescription.textContent = data.description;
+                    flavorInfo.classList.add('show');
+                    
+                    // 3秒后自动隐藏
+                    setTimeout(() => {
+                        flavorInfo.classList.remove('show');
+                    }, 3000);
+                });
+            });
+        }
+
+        // 产区卡片交互
+        function setupOriginCards() {
+            const cards = document.querySelectorAll('.origin-card');
+            
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    card.style.transform = 'translateY(-10px) scale(1.05)';
+                    setTimeout(() => {
+                        card.style.transform = 'translateY(-10px)';
+                    }, 200);
+                });
+            });
+        }
+
+        // 豆子卡片交互
+        function setupBeanCards() {
+            const cards = document.querySelectorAll('.bean-card');
+            
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    const visual = card.querySelector('.bean-visual');
+                    visual.style.animationDuration = '0.5s';
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    const visual = card.querySelector('.bean-visual');
+                    visual.style.animationDuration = '2s';
+                });
+            });
+        }
+
+        // 风味条形图动画
+        function animateFlavorBars() {
+            const bars = document.querySelectorAll('.bar-fill');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const bar = entry.target;
+                        const width = bar.style.width;
+                        bar.style.width = '0%';
+                        setTimeout(() => {
+                            bar.style.width = width;
+                        }, 100);
+                    }
+                });
+            });
+
+            bars.forEach(bar => observer.observe(bar));
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            createCoffeeBeans();
+            setupNavigation();
+            setupFlavorWheel();
+            setupOriginCards();
+            setupBeanCards();
+            animateFlavorBars();
+        });
+    </script>
+</body>
+</html>
