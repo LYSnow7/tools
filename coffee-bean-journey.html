@@ -1,0 +1,322 @@
+import React, { useState, useEffect } from 'react';
+
+const CoffeeBeanJourney = () => {
+  const [gameStage, setGameStage] = useState('intro'); // intro, process, roasting, flavor, complete
+  const [processChoice, setProcessChoice] = useState(null); // 'sun' or 'water'
+  const [roastLevel, setRoastLevel] = useState(0); // 0-100
+  const [isRoasting, setIsRoasting] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+  const [animationClass, setAnimationClass] = useState('');
+
+  // 重置游戏
+  const resetGame = () => {
+    setGameStage('intro');
+    setProcessChoice(null);
+    setRoastLevel(0);
+    setIsRoasting(false);
+    setShowResult(false);
+    setAnimationClass('');
+  };
+
+  // 处理法选择
+  const handleProcessChoice = (choice) => {
+    setProcessChoice(choice);
+    setAnimationClass('animate-bounce');
+    setTimeout(() => {
+      setGameStage('roasting');
+      setAnimationClass('');
+    }, 1500);
+  };
+
+  // 烘焙控制
+  const startRoasting = () => {
+    setIsRoasting(true);
+  };
+
+  const stopRoasting = () => {
+    setIsRoasting(false);
+    setTimeout(() => {
+      setGameStage('flavor');
+      setTimeout(() => setShowResult(true), 500);
+    }, 1000);
+  };
+
+  // 烘焙进度更新
+  useEffect(() => {
+    let interval;
+    if (isRoasting && roastLevel < 100) {
+      interval = setInterval(() => {
+        setRoastLevel(prev => Math.min(prev + 2, 100));
+      }, 100);
+    }
+    return () => clearInterval(interval);
+  }, [isRoasting, roastLevel]);
+
+  // 获取烘焙程度描述
+  const getRoastDescription = () => {
+    if (roastLevel < 30) return { level: '浅度烘焙', desc: '保留了最多的花果香气！', color: '#D2B48C' };
+    if (roastLevel < 70) return { level: '中度烘焙', desc: '平衡的风味，坚果和焦糖味刚好！', color: '#8B4513' };
+    return { level: '深度烘焙', desc: '浓郁醇厚，巧克力味十足！', color: '#654321' };
+  };
+
+  // 获取风味组合
+  const getFlavorProfile = () => {
+    const roastDesc = getRoastDescription();
+    if (processChoice === 'sun') {
+      if (roastLevel < 30) return ['草莓', '花香', '果汁感'];
+      if (roastLevel < 70) return ['热带水果', '焦糖', '甜香'];
+      return ['蜂蜜', '黑巧克力', '果干'];
+    } else {
+      if (roastLevel < 30) return ['柠檬', '茉莉花', '清香'];
+      if (roastLevel < 70) return ['榛果', '牛奶巧克力', '平衡'];
+      return ['黑巧克力', '坚果', '焦糖'];
+    }
+  };
+
+  // 咖啡豆颜色根据烘焙程度变化
+  const getBeanColor = () => {
+    if (roastLevel < 20) return '#C4B896'; // 淡绿灰色（生豆）
+    if (roastLevel < 40) return '#D4C4A0'; // 米黄色
+    if (roastLevel < 60) return '#DEB887'; // 浅棕
+    if (roastLevel < 80) return '#8B4513'; // 中棕
+    return '#654321'; // 深棕
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 text-center">
+        
+        {/* 游戏标题 */}
+        <h1 className="text-2xl font-bold text-gray-800 mb-8 flex items-center justify-center gap-2">
+          <div 
+            className="w-6 h-7 rounded-full relative inline-block"
+            style={{ 
+              backgroundColor: '#C4B896',
+              transform: 'rotate(-15deg)'
+            }}
+          >
+            {/* 咖啡豆中间的裂缝 */}
+            <div 
+              className="absolute top-1 left-1/2 transform -translate-x-1/2 w-0.5 h-5 rounded-full"
+              style={{ backgroundColor: '#8B4513', opacity: 0.3 }}
+            />
+          </div>
+          一颗咖啡豆的奇妙旅程
+        </h1>
+
+        {/* 开场介绍 */}
+        {gameStage === 'intro' && (
+          <div className="space-y-6">
+            <div className="text-6xl animate-bounce">🍒</div>
+            <div className="bg-orange-100 rounded-2xl p-4">
+              <p className="text-gray-700 leading-relaxed">
+                你好！我是一颗咖啡樱桃，我的旅程将由你决定。<br/>
+                让我们开始这段美妙的变身之旅吧！
+              </p>
+            </div>
+            <button 
+              onClick={() => setGameStage('process')}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-2xl text-lg font-semibold transition-all duration-300 transform hover:scale-105"
+            >
+              开始旅程 ✨
+            </button>
+          </div>
+        )}
+
+        {/* 第一幕：处理法选择 */}
+        {gameStage === 'process' && (
+          <div className="space-y-6">
+            <div className={`text-6xl ${animationClass}`}>🍒</div>
+            <div className="bg-blue-50 rounded-2xl p-4">
+              <p className="text-gray-700 mb-4">请选择我的处理方式：</p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => handleProcessChoice('sun')}
+                className="bg-yellow-400 hover:bg-yellow-500 text-white p-6 rounded-2xl transition-all duration-300 transform hover:scale-105 group"
+              >
+                <div className="text-4xl mb-2 group-hover:animate-spin">☀️</div>
+                <div className="font-semibold">日晒法</div>
+                <div className="text-xs mt-1 opacity-80">阳光晾晒</div>
+              </button>
+              
+              <button
+                onClick={() => handleProcessChoice('water')}
+                className="bg-blue-400 hover:bg-blue-500 text-white p-6 rounded-2xl transition-all duration-300 transform hover:scale-105 group"
+              >
+                <div className="text-4xl mb-2 group-hover:animate-bounce">💧</div>
+                <div className="font-semibold">水洗法</div>
+                <div className="text-xs mt-1 opacity-80">清水处理</div>
+              </button>
+            </div>
+
+            {processChoice && (
+              <div className="bg-green-100 rounded-2xl p-4 animate-fadeIn">
+                <p className="text-gray-700">
+                  {processChoice === 'sun' 
+                    ? '☀️ 日晒让我充满了阳光的味道，像热带水果一样奔放！'
+                    : '💧 水洗让我变得很干净，口感清爽，酸味明亮！'
+                  }
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 第二幕：烘焙阶段 */}
+        {gameStage === 'roasting' && (
+          <div className="space-y-6">
+            <div className="relative">
+              {/* 烘焙中的咖啡豆 - 使用自定义图案 */}
+              <div 
+                className={`transition-all duration-300 ${isRoasting ? 'animate-spin' : ''}`}
+              >
+                <div 
+                  className="w-16 h-20 mx-auto rounded-full relative"
+                  style={{ 
+                    backgroundColor: getBeanColor(),
+                    transform: 'rotate(-15deg)'
+                  }}
+                >
+                  {/* 咖啡豆中间的裂缝 */}
+                  <div 
+                    className="absolute top-2 left-1/2 transform -translate-x-1/2 w-1 h-16 rounded-full"
+                    style={{ backgroundColor: '#8B4513', opacity: 0.3 }}
+                  />
+                  {/* 咖啡豆的高光 */}
+                  <div 
+                    className="absolute top-3 left-4 w-2 h-3 rounded-full bg-white opacity-20"
+                  />
+                </div>
+              </div>
+              {/* 烘焙火焰效果 */}
+              {isRoasting && (
+                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-2xl animate-pulse">
+                  🔥
+                </div>
+              )}
+            </div>
+            
+            <div className="bg-orange-100 rounded-2xl p-4">
+              <p className="text-gray-700 mb-4">为我烘焙吧！按住"加热"，在合适时机松开！</p>
+              
+              {/* 烘焙进度条 */}
+              <div className="bg-gray-200 rounded-full h-4 mb-4 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 h-full transition-all duration-200 rounded-full"
+                  style={{ width: `${roastLevel}%` }}
+                />
+              </div>
+              
+              <div className="flex justify-between text-xs text-gray-600 mb-4">
+                <span>浅烘</span>
+                <span>中烘</span>
+                <span>深烘</span>
+              </div>
+              
+              <div className="text-sm text-gray-700 mb-4">
+                烘焙程度: {roastLevel}% - {getRoastDescription().level}
+              </div>
+            </div>
+
+            <button
+              onMouseDown={startRoasting}
+              onMouseUp={stopRoasting}
+              onTouchStart={startRoasting}
+              onTouchEnd={stopRoasting}
+              className={`w-full py-4 px-8 rounded-2xl text-lg font-semibold transition-all duration-200 ${
+                isRoasting 
+                  ? 'bg-red-500 text-white scale-95' 
+                  : 'bg-orange-500 hover:bg-orange-600 text-white'
+              }`}
+            >
+              {isRoasting ? '🔥 烘焙中... 🔥' : '🔥 按住加热 🔥'}
+            </button>
+
+            {roastLevel > 0 && !isRoasting && (
+              <button
+                onClick={() => {
+                  setGameStage('flavor');
+                  setTimeout(() => setShowResult(true), 500);
+                }}
+                className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-xl transition-all duration-300"
+              >
+                完成烘焙 ✨
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* 第三幕：风味展示 */}
+        {gameStage === 'flavor' && (
+          <div className="space-y-6">
+            <div className="text-6xl animate-pulse">☕</div>
+            
+            <div className="bg-gradient-to-r from-amber-100 to-orange-100 rounded-2xl p-6">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">🎉 你的专属咖啡诞生了！</h3>
+              
+              <div className="space-y-3">
+                <div className="bg-white rounded-xl p-3">
+                  <span className="text-sm text-gray-600">处理方式: </span>
+                  <span className="font-semibold">
+                    {processChoice === 'sun' ? '☀️ 日晒法' : '💧 水洗法'}
+                  </span>
+                </div>
+                
+                <div className="bg-white rounded-xl p-3">
+                  <span className="text-sm text-gray-600">烘焙程度: </span>
+                  <span className="font-semibold" style={{ color: getRoastDescription().color }}>
+                    🔥 {getRoastDescription().level} ({roastLevel}%)
+                  </span>
+                </div>
+              </div>
+
+              {showResult && (
+                <div className="mt-6 animate-fadeIn">
+                  <h4 className="font-semibold text-gray-800 mb-3">🌟 风味特征：</h4>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {getFlavorProfile().map((flavor, index) => (
+                      <span
+                        key={index}
+                        className="bg-gradient-to-r from-pink-200 to-orange-200 px-4 py-2 rounded-full text-sm font-medium text-gray-800 animate-bounce"
+                        style={{ animationDelay: `${index * 0.2}s` }}
+                      >
+                        {flavor}
+                      </span>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-4 text-sm text-gray-600 italic">
+                    "{getRoastDescription().desc}"
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {showResult && (
+              <button
+                onClick={resetGame}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-3 rounded-2xl text-lg font-semibold transition-all duration-300 transform hover:scale-105"
+              >
+                🔄 再来一杯？
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default CoffeeBeanJourney;
