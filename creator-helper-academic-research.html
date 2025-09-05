@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学术研究辅助工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* 导航栏 */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        /* 主要内容区 */
+        .main-content {
+            padding: 40px 0;
+        }
+        
+        /* 首页样式 */
+        .home-section {
+            text-align: center;
+            padding: 80px 0;
+        }
+        
+        .hero-title {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 50px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 60px 0;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .feature-desc {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .cta-button {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        /* 问答助手样式 */
+        .qa-section {
+            display: none;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .chat-messages {
+            height: 500px;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 70%;
+        }
+        
+        .message.user {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+        }
+        
+        .message.assistant {
+            background: white;
+            color: #333;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 20px;
+            background: white;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+        }
+        
+        .chat-input input:focus {
+            border-color: #667eea;
+        }
+        
+        .chat-input button {
+            margin-left: 15px;
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        /* 文献库样式 */
+        .library-section {
+            display: none;
+        }
+        
+        .upload-area {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 30px;
+            border: 3px dashed #667eea;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            background: #f8f9ff;
+        }
+        
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .document-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .document-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        /* 概念图谱样式 */
+        .concept-section {
+            display: none;
+        }
+        
+        .concept-map {
+            background: white;
+            height: 600px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .concept-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+        }
+        
+        .concept-controls input {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            outline: none;
+            width: 250px;
+        }
+        
+        /* 学习资源样式 */
+        .learning-section {
+            display: none;
+        }
+        
+        .resource-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+        
+        .category-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        /* 用户中心样式 */
+        .account-section {
+            display: none;
+        }
+        
+        .account-tabs {
+            display: flex;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .account-tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .account-tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .account-content {
+            background: white;
+            padding: 40px;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 15px;
+            }
+            
+            .nav-links a {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* 显示当前页面 */
+        .section.active {
+            display: block !important;
+        }
+        
+        /* SVG 图谱样式 */
+        .svg-map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .node:hover {
+            transform: scale(1.1);
+        }
+        
+        .link {
+            stroke: #999;
+            stroke-width: 1;
+            opacity: 0.6;
+        }
+        
+        .node-label {
+            font-size: 12px;
+            fill: #333;
+            text-anchor: middle;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">📚 QueerFemAI</div>
+                <ul class="nav-links">
+                    <li><a href="#" onclick="showSection('home')" class="active">首页</a></li>
+                    <li><a href="#" onclick="showSection('qa')">问答助手</a></li>
+                    <li><a href="#" onclick="showSection('library')">文献&笔记库</a></li>
+                    <li><a href="#" onclick="showSection('concept')">概念图谱</a></li>
+                    <li><a href="#" onclick="showSection('learning')">学习资源</a></li>
+                    <li><a href="#" onclick="showSection('account')">我的</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="main-content">
+            <!-- 首页 -->
+            <div id="home" class="section home-section active">
+                <h1 class="hero-title">您的专属酷儿/女权主义研究AI助手</h1>
+                <p class="hero-subtitle">整合个人笔记与文献，提供定制化的理论匹配、文献管理和概念探索</p>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📚</div>
+                        <h3 class="feature-title">智能文献推荐</h3>
+                        <p class="feature-desc">根据您的研究笔记和兴趣，智能推荐相关的学术文献，帮助您发现新的研究视角。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🧩</div>
+                        <h3 class="feature-title">理论框架匹配</h3>
+                        <p class="feature-desc">为您的研究问题匹配最合适的理论框架，提供精准的理论指导和分析工具。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🌐</div>
+                        <h3 class="feature-title">概念关系图谱</h3>
+                        <p class="feature-desc">可视化展示理论概念之间的关联，帮助您探索知识网络，发现新的研究连接点。</p>
+                    </div>
+                </div>
+                
+                <a href="#" class="cta-button" onclick="showSection('qa')">开始使用</a>
+            </div>
+
+            <!-- 问答助手 -->
+            <div id="qa" class="section qa-section">
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <h2>🤖 AI研究助手</h2>
+                        <p>基于您的知识库提供精准答案</p>
+                    </div>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message assistant">
+                            <p>您好！我是您的专属研究助手。我可以基于您的文献库和笔记回答关于酷儿研究和女权主义理论的问题。</p>
+                            <p><strong>试试问我：</strong></p>
+                            <p>• "哪些理论适用于跨性别群体研究？"</p>
+                            <p>• "交叉性理论的核心观点是什么？"</p>
+                            <p>• "推荐一些关于酷儿表演性的文献"</p>
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="userInput" placeholder="输入您的问题..." onkeypress="handleKeyPress(event)">
+                        <button onclick="sendMessage()">发送</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 文献&笔记库 -->
+            <div id="library" class="section library-section">
+                <h2 style="text-align: center; margin-bottom: 30px; color: #333;">📖 文献 & 笔记管理</h2>
+                
+                <div class="upload-area">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">📁</div>
+                    <h3>上传您的文献和笔记</h3>
+                    <p style="color: #666; margin: 15px 0;">支持 PDF、Word、TXT 格式，AI将自动解析内容并生成智能标签</p>
+                    <button class="cta-button" onclick="simulateUpload()">选择文件</button>
+                </div>
+                
+                <div class="documents-grid" id="documentsGrid">
+                    <div class="document-card">
+                        <h4>🏳️‍⚧️ 跨性别理论基础</h4>
+                        <p style="color: #666; margin: 10px 0;">Sandy Stone, Julia Serano</p>
+                        <div style="margin: 15px 0;">
+                            <span style="background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; margin-right: 5px;">跨性别</span>
+                            <span style="background: #f3e5f5; color: #7b1fa2; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; margin-right: 5px;">身份认同</span>
+                            <span style="background: #e8f5e8; color: #388e3c; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;">理论建构</span>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #777;">上传时间: 2024-01-15</p>
+                    </div>
+                    
+                    <div class="document-card">
+                        <h4>🔄 交叉性分析框架</h4>
+                        <p style="color: #666; margin: 10px 0;">Kimberlé Crenshaw</p>
+                        <div style="margin: 15px 0;">
+                            <span style="background: #fff3e0; color: #f57c00; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; margin-right: 5px;">交叉性</span>
+                            <span style="background: #fce4ec; color: #c2185b; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; margin-right: 5px;">种族</span>
+                            <span style="background: #e1f5fe; color: #0277bd; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;">性别</span>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #777;">上传时间: 2024-01-12</p>
+                    </div>
+                    
+                    <div class="document-card">
+                        <h4>🎭 性别表演性理论</h4>
+                        <p style="color: #666; margin: 10px 0;">Judith Butler</p>
+                        <div style="margin: 15px 0;">
+                            <span style="background: #f1f8e9; color: #689f38; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; margin-right: 5px;">表演性</span>
+                            <span style="background: #e8eaf6; color: #3f51b5; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; margin-right: 5px;">后结构主义</span>
+                            <span style="background: #fff8e1; color: #fbc02d; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;">性别建构</span>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #777;">上传时间: 2024-01-10</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 概念图谱 -->
+            <div id="concept" class="section concept-section">
+                <h2 style="text-align: center; margin-bottom: 30px; color: #333;">🌐 概念关系图谱</h2>
+                
+                <div class="concept-map">
+                    <div class="concept-controls">
+                        <input type="text" placeholder="搜索概念..." id="conceptSearch">
+                    </div>
+                    <svg id="conceptSvg" class="svg-map"></svg>
+                </div>
+            </div>
+
+            <!-- 学习资源 -->
+            <div id="learning" class="section learning-section">
+                <h2 style="text-align: center; margin-bottom: 30px; color: #333;">📚 学习 & 资源</h2>
+                
+                <div class="resource-categories">
+                    <div class="category-card">
+                        <div style="font-size: 2.5rem; margin-bottom: 20px;">📖</div>
+                        <h3>理论指南</h3>
+                        <p style="color: #666; margin: 15px 0;">核心理论的简明解释和应用指导</p>
+                        <a href="#" class="cta-button" style="font-size: 0.9rem; padding: 10px 20px;">浏览指南</a>
+                    </div>
+                    
+                    <div class="category-card">
+                        <div style="font-size: 2.5rem; margin-bottom: 20px;">💭</div>
+                        <h3>术语解释</h3>
+                        <p style="color: #666; margin: 15px 0;">关键概念和术语的详细定义</p>
+                        <a href="#" class="cta-button" style="font-size: 0.9rem; padding: 10px 20px;">查看术语</a>
+                    </div>
+                    
+                    <div class="category-card">
+                        <div style="font-size: 2.5rem; margin-bottom: 20px;">🔬</div>
+                        <h3>研究方法</h3>
+                        <p style="color: #666; margin: 15px 0;">定性和定量研究方法指导</p>
+                        <a href="#" class="cta-button" style="font-size: 0.9rem; padding: 10px 20px;">学习方法</a>
+                    </div>
+                    
+                    <div class="category-card">
+                        <div style="font-size: 2.5rem; margin-bottom: 20px;">📊</div>
+                        <h3>理论对比</h3>
+                        <p style="color: #666; margin: 15px 0;">不同理论流派的对比分析</p>
+                        <a href="#" class="cta-button" style="font-size: 0.9rem; padding: 10px 20px;">对比分析</a>
+                    </div>
+                    
+                    <div class="category-card">
+                        <div style="font-size: 2.5rem; margin-bottom: 20px;">⭐</div>
+                        <h3>经典必读</h3>
+                        <p style="color: #666; margin: 15px 0;">领域内经典文献推荐清单</p>
+                        <a href="#" class="cta-button" style="font-size: 0.9rem; padding: 10px 20px;">获取清单</a>
+                    </div>
+                    
+                    <div class="category-card">
+                        <div style="font-size: 2.5rem; margin-bottom: 20px;">🎯</div>
+                        <h3>案例分析</h3>
+                        <p style="color: #666; margin: 15px 0;">理论应用的实际案例研究</p>
+                        <a href="#" class="cta-button" style="font-size: 0.9rem; padding: 10px 20px;">查看案例</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户中心 -->
+            <div id="account" class="section account-section">
+                <h2 style="text-align: center; margin-bottom: 30px; color: #333;">👤 我的账户</h2>
+                
+                <div class="account-tabs">
+                    <div class="account-tab active" onclick="switchAccountTab('profile')">个人信息</div>
+                    <div class="account-tab" onclick="switchAccountTab('notes')">我的笔记</div>
+                    <div class="account-tab" onclick="switchAccountTab('favorites')">收藏内容</div>
+                    <div class="account-tab" onclick="switchAccountTab('settings')">偏好设置</div>
+                </div>
+                
+                <div class="account-content" id="accountContent">
+                    <div id="profile-content">
+                        <h3 style="margin-bottom: 20px;">个人信息</h3>
+                        <p><strong>用户名:</strong> 研究者001</p>
+                        <p><strong>邮箱:</strong> researcher@university.edu</p>
+                        <p><strong>研究领域:</strong> 酷儿研究, 女权主义理论</p>
+                        <p><strong>加入时间:</strong> 2024年1月</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面导航功能
+        function showSection(sectionName) {
+            // 隐藏所有section
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // 显示目标section
+            document.getElementById(sectionName).classList.add('active');
+            
+            // 更新导航栏活动状态
+            const navLinks = document.querySelectorAll('.nav-links a');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 如果是概念图谱页面，初始化图谱
+            if (sectionName === 'concept') {
+                initConceptMap();
+            }
+        }
+        
+        // 聊天功能
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // 添加用户消息
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // 模拟AI回复
+            setTimeout(() => {
+                addMessage(generateAIResponse(message), 'assistant');
+            }, 1000);
+        }
+        
+        function addMessage(content, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.innerHTML = `<p>${content}</p>`;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        function generateAIResponse(question) {
+            const responses = {
+                '跨性别': '根据您的知识库，跨性别理论主要关注性别身份与生理性别的分离。Sandy Stone的《跨性别帝国》和Julia Serano的《被排除的女性》是该领域的重要文献。\n\n📚 相关文献：\n• Stone, S. (1987). The Empire Strikes Back\n• Serano, J. (2007). Whipping Girl',
+                '交叉性': '交叉性理论由Kimberlé Crenshaw提出，强调不同身份标识（种族、性别、阶级等）的交叉影响。这一理论对理解复合性压迫具有重要意义。\n\n🔗 相关概念：\n• 身份政治\n• 多重边缘化\n• 结构性不平等',
+                '表演性': 'Judith Butler的性别表演性理论认为性别是通过重复性行为构建的，而非天生固有的。这一理论挑战了二元性别观念。\n\n💡 核心观点：\n• 性别的建构性\n• 重复与引证\n• 颠覆的可能性'
+            };
+            
+            for (let keyword in responses) {
+                if (question.includes(keyword)) {
+                    return responses[keyword];
+                }
+            }
+            
+            return '感谢您的问题！基于您上传的文献，我正在为您搜索相关信息。请注意，我的回答基于您的个人知识库，如需更多信息，建议上传更多相关文献。\n\n🔍 建议搜索关键词：\n• 添加更多文献到您的知识库\n• 尝试使用更具体的术语\n• 查看概念图谱寻找相关理论';
+        }
+        
+        // 文件上传模拟
+        function simulateUpload() {
+            alert('文件上传功能演示\n\n在实际应用中，这里会:\n• 打开文件选择对话框\n• 支持拖拽上传\n• AI自动解析文档内容\n• 生成智能标签和摘要');
+            
+            // 模拟添加新文档
+            const grid = document.getElementById('documentsGrid');
+            const newDoc = document.createElement('div');
+            newDoc.className = 'document-card';
+            newDoc.innerHTML = `
+                <h4>🆕 新上传文档</h4>
+                <p style="color: #666; margin: 10px 0;">刚刚上传</p>
+                <div style="margin: 15px 0;">
+                    <span style="background: #e8f5e8; color: #388e3c; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; margin-right: 5px;">正在解析...</span>
+                </div>
+                <p style="font-size: 0.9rem; color: #777;">上传时间: ${new Date().toLocaleDateString()}</p>
+            `;
+            grid.insertBefore(newDoc, grid.firstChild);
+        }
+        
+        // 概念图谱初始化
+        function initConceptMap() {
+            const svg = document.getElementById('conceptSvg');
+            const width = svg.clientWidth || 800;
+            const height = svg.clientHeight || 600;
+            
+            // 清空现有内容
+            svg.innerHTML = '';
+            
+            // 设置SVG尺寸
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            
+            // 示例数据
+            const nodes = [
+                { id: 'intersectionality', name: '交叉性理论', x: width/2, y: height/2, color: '#667eea' },
+                { id: 'gender-performativity', name: '性别表演性', x: width/3, y: height/3, color: '#764ba2' },
+                { id: 'transgender', name: '跨性别理论', x: 2*width/3, y: height/3, color: '#f093fb' },
+                { id: 'queer-theory', name: '酷儿理论', x: width/4, y: 2*height/3, color: '#48c6ef' },
+                { id: 'feminism', name: '女权主义', x: 3*width/4, y: 2*height/3, color: '#ffecd2' },
+                { id: 'identity-politics', name: '身份政治', x: width/2, y: height/4, color: '#a8edea' }
+            ];
+            
+            const links = [
+                { source: 'intersectionality', target: 'feminism' },
+                { source: 'intersectionality', target: 'identity-politics' },
+                { source: 'gender-performativity', target: 'queer-theory' },
+                { source: 'transgender', target: 'queer-theory' },
+                { source: 'queer-theory', target: 'feminism' },
+                { source: 'identity-politics', target: 'transgender' }
+            ];
+            
+            // 绘制连线
+            links.forEach(link => {
+                const sourceNode = nodes.find(n => n.id === link.source);
+                const targetNode = nodes.find(n => n.id === link.target);
+                
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', sourceNode.x);
+                line.setAttribute('y1', sourceNode.y);
+                line.setAttribute('x2', targetNode.x);
+                line.setAttribute('y2', targetNode.y);
+                line.setAttribute('class', 'link');
+                svg.appendChild(line);
+            });
+            
+            // 绘制节点
+            nodes.forEach(node => {
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                group.setAttribute('class', 'node');
+                group.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+                
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('r', 30);
+                circle.setAttribute('fill', node.color);
+                circle.setAttribute('opacity', 0.8);
+                
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('class', 'node-label');
+                text.setAttribute('dy', 50);
+                text.textContent = node.name;
+                
+                group.appendChild(circle);
+                group.appendChild(text);
+                svg.appendChild(group);
+                
+                // 添加点击事件
+                group.addEventListener('click', () => {
+                    alert(`概念: ${node.name}\n\n相关文献:\n• 点击查看详细信息\n• 查看相关理论连接\n• 探索概念发展历程`);
+                });
+                
+                // 添加悬停效果
+                group.addEventListener('mouseenter', () => {
+                    circle.setAttribute('r', 35);
+                    circle.setAttribute('opacity', 1);
+                });
+                
+                group.addEventListener('mouseleave', () => {
+                    circle.setAttribute('r', 30);
+                    circle.setAttribute('opacity', 0.8);
+                });
+            });
+        }
+        
+        // 概念搜索功能
+        document.getElementById('conceptSearch').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const labels = document.querySelectorAll('.node-label');
+            
+            labels.forEach(label => {
+                const node = label.parentElement;
+                if (label.textContent.toLowerCase().includes(query) || query === '') {
+                    node.style.opacity = '1';
+                } else {
+                    node.style.opacity = '0.3';
+                }
+            });
+        });
+        
+        // 账户页面标签切换
+        function switchAccountTab(tabName) {
+            // 更新标签样式
+            const tabs = document.querySelectorAll('.account-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 更新内容
+            const content = document.getElementById('accountContent');
+            const contents = {
+                'profile': `
+                    <h3 style="margin-bottom: 20px;">个人信息</h3>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                        <p style="margin-bottom: 10px;"><strong>用户名:</strong> 研究者001</p>
+                        <p style="margin-bottom: 10px;"><strong>邮箱:</strong> researcher@university.edu</p>
+                        <p style="margin-bottom: 10px;"><strong>研究领域:</strong> 酷儿研究, 女权主义理论</p>
+                        <p style="margin-bottom: 10px;"><strong>机构:</strong> XX大学社会学系</p>
+                        <p><strong>加入时间:</strong> 2024年1月</p>
+                    </div>
+                `,
+                'notes': `
+                    <h3 style="margin-bottom: 20px;">我的研究笔记</h3>
+                    <div style="display: grid; gap: 15px;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 4px solid #667eea;">
+                            <h4>交叉性理论在当代的应用</h4>
+                            <p style="color: #666; font-size: 0.9rem; margin: 5px 0;">2024-01-20</p>
+                            <p>探讨Crenshaw交叉性理论在数字媒体研究中的新应用...</p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 4px solid #764ba2;">
+                            <h4>Butler性别表演性的批评与发展</h4>
+                            <p style="color: #666; font-size: 0.9rem; margin: 5px 0;">2024-01-18</p>
+                            <p>整理近年来学界对Butler理论的主要批评观点和理论发展...</p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 4px solid #48c6ef;">
+                            <h4>跨性别权利运动的理论基础</h4>
+                            <p style="color: #666; font-size: 0.9rem; margin: 5px 0;">2024-01-15</p>
+                            <p>分析跨性别权利运动所依据的主要理论框架和政治策略...</p>
+                        </div>
+                    </div>
+                `,
+                'favorites': `
+                    <h3 style="margin-bottom: 20px;">收藏的内容</h3>
+                    <div style="display: grid; gap: 15px;">
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 10px;">
+                            <h4>📚 收藏的AI回答</h4>
+                            <p style="color: #856404;">关于"酷儿理论与后现代主义的关系"的详细解答</p>
+                            <p style="font-size: 0.8rem; color: #6c757d;">收藏于 2024-01-19</p>
+                        </div>
+                        <div style="background: #d4edda; padding: 15px; border-radius: 10px;">
+                            <h4>📄 收藏的文献</h4>
+                            <p style="color: #155724;">Butler, J. (1990). Gender Trouble: Feminism and the Subversion of Identity</p>
+                            <p style="font-size: 0.8rem; color: #6c757d;">收藏于 2024-01-17</p>
+                        </div>
+                        <div style="background: #cce5ff; padding: 15px; border-radius: 10px;">
+                            <h4>🌐 收藏的概念</h4>
+                            <p style="color: #004085;">交叉性理论 - 在概念图谱中的详细关联分析</p>
+                            <p style="font-size: 0.8rem; color: #6c757d;">收藏于 2024-01-16</p>
+                        </div>
+                    </div>
+                `,
+                'settings': `
+                    <h3 style="margin-bottom: 20px;">偏好设置</h3>
+                    <div style="display: grid; gap: 20px;">
+                        <div>
+                            <h4 style="margin-bottom: 10px;">研究兴趣领域</h4>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                <label style="display: flex; align-items: center; background: #e3f2fd; padding: 8px 12px; border-radius: 15px;">
+                                    <input type="checkbox" checked style="margin-right: 8px;"> 酷儿理论
+                                </label>
+                                <label style="display: flex; align-items: center; background: #f3e5f5; padding: 8px 12px; border-radius: 15px;">
+                                    <input type="checkbox" checked style="margin-right: 8px;"> 女权主义理论
+                                </label>
+                                <label style="display: flex; align-items: center; background: #e8f5e8; padding: 8px 12px; border-radius: 15px;">
+                                    <input type="checkbox" style="margin-right: 8px;"> 批判种族理论
+                                </label>
+                                <label style="display: flex; align-items: center; background: #fff8e1; padding: 8px 12px; border-radius: 15px;">
+                                    <input type="checkbox" style="margin-right: 8px;"> 后殖民理论
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 10px;">界面偏好</h4>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
+                                <p style="margin-bottom: 10px;">
+                                    <label>语言设置: </label>
+                                    <select style="padding: 5px; border-radius: 5px; border: 1px solid #ddd;">
+                                        <option>中文</option>
+                                        <option>English</option>
+                                    </select>
+                                </p>
+                                <p style="margin-bottom: 10px;">
+                                    <label>主题色彩: </label>
+                                    <select style="padding: 5px; border-radius: 5px; border: 1px solid #ddd;">
+                                        <option>紫蓝渐变</option>
+                                        <option>粉紫渐变</option>
+                                        <option>蓝绿渐变</option>
+                                    </select>
+                                </p>
+                                <p>
+                                    <label>
+                                        <input type="checkbox" checked style="margin-right: 8px;">
+                                        启用智能推荐
+                                    </label>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            };
+            
+            content.innerHTML = contents[tabName];
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化事件监听器
+            console.log('学术研究辅助工具 Demo 加载完成');
+            
+            // 添加一些交互提示
+            setTimeout(() => {
+                if (document.getElementById('home').classList.contains('active')) {
+                    console.log('欢迎使用学术研究辅助工具！点击导航栏体验不同功能。');
+                }
+            }, 2000);
+        });
+        
+        // 添加一些演示用的交互效果
+        document.addEventListener('click', function(e) {
+            // 为所有按钮添加点击动画
+            if (e.target.classList.contains('cta-button')) {
+                e.target.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    e.target.style.transform = '';
+                }, 150);
+            }
+        });
+        
+        // 模拟实时更新功能
+        setInterval(() => {
+            const messageCount = document.querySelectorAll('.message').length;
+            if (messageCount > 2) {
+                // 更新页面标题显示消息数量
+                document.title = `学术研究辅助工具 (${messageCount-1} 条对话)`;
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
